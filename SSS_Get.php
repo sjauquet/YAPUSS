@@ -3,7 +3,8 @@
     V6 By sebcbien, 18/10/2017
     V6.1 by Jojo (19/10/2017) : server IP adress generated automatically
 	V6.2 by sebcbien added ptz placeholder
-	V 6.3 by Jojo (19/10/2017) : remove hardcoding of file name &&location
+	V6.3 by Jojo (19/10/2017) : remove hardcoding of file name & location
+	V6.4 by Jojo (20/10/2017) : links are opened in a new tab
     Thread here:
     https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
     Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
@@ -105,10 +106,10 @@ foreach($obj->data->cameras as $cam){
 	echo "<p>-----------------------------------------------------------------------------------------</p>";
 	echo "<p>Cam <b>". $nomCam ." (" . $id_cam . ")</b> detected</p>";
 	echo "<p>Vendor <b>". $vendor ." Model:(" . $model . ")</b></p>";
-	echo "<p> Snapshot on Stream Live: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=0>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=0</a></p>";
-	echo "<p> Snapshot on Stream Recording on Syno: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=1>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=1</a></p>";
-	echo "<p> Snapshot on Stream Mobile: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=2>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=2</a></p>";
-	echo "<p> Stream MJPEG: <a href=http://".$ip.$file."?stream_type=mjpeg&camera=".$id_cam.">http://".$ip.$file."?stream_type=mjpeg&camera=".$id_cam."</a></p>";
+	echo "<p> Snapshot on Stream Live: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=0 target='_blank'>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=0</a></p>";
+	echo "<p> Snapshot on Stream Recording on Syno: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=1 target='_blank'>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=1</a></p>";
+	echo "<p> Snapshot on Stream Mobile: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=2 target='_blank'>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=2</a></p>";
+	echo "<p> Stream MJPEG: <a href=http://".$ip.$file."?stream_type=mjpeg&camera=".$id_cam." target='_blank'>http://".$ip.$file."?stream_type=mjpeg&camera=".$id_cam."</a></p>";
 	// http://diskstation412/get_mjpeg/getV1.php?cam=19&format=mjpeg
 	//check if cam is connected
 	if(!$cam->status) {
