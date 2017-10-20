@@ -1,6 +1,7 @@
 <?php 
 /** 
     V6 By sebcbien, 18/10/2017
+    V6.1 by Jojo (19/10/2017) : server IP adress generated automatically
     Thread here:
    https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
     Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
@@ -13,11 +14,9 @@
  http://xxxxxx/get_snapshots/getVX.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
  */
 // Configuration 
-$user = "XXXXXXXX";  // Synology username with rights to Surveillance station 
-$pass = "XXXXXXXXX";  // Password of the user entered above 
-$ip_ss = "192.168.XXX.XXX";  // IP-Adress of Synology Surveillance Station
-$ip = "192.168.XXX.XXX";  // IP-Adress of your Web server hosting this script
-
+$user = "xxx";  // Synology username with rights to Surveillance station 
+$pass = "xxx";  // Password of the user entered above 
+$ip_ss = "192.168.xxx.xxx";  // IP-Adress of Synology Surveillance Station
 $port = "5000";  // default port of Surveillance Station 
 $http = "http"; // Change to https if you use a secure connection
 $stream_type = $_GET['stream_type'];
@@ -26,7 +25,8 @@ $cameraStream = $_GET["stream"];
 $list = $_GET["list"];
 $vCamera = 7; //Version API SYNO.SurveillanceStation.Camera
 $vAuth = ""; // 2; with 2, no images displayed, too fast logout problem ?  //Version de l' SYNO.API.Auth a utiliser
-$version = "V6";
+$ip = $_SERVER['SERVER_ADDR']; // IP-Adress of your Web server hosting this script
+$version = "V6"; 
 
 if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL) { 
     $list = "camera"; 
@@ -183,4 +183,4 @@ if ($cameraID != NULL && $stream_type == "mjpeg") {
 	$json = file_get_contents($http."://".$ip_ss.":".$port."/webapi/".$AuthPath."?api=SYNO.API.Auth&method=Logout&version=".$vAuth."&session=SurveillanceStation&_sid=".$sid);
 	$obj = json_decode($json);
 	}
-?> 
+?>
