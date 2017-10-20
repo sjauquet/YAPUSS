@@ -3,6 +3,7 @@
     V6 By sebcbien, 18/10/2017
     V6.1 by Jojo (19/10/2017) : server IP adress generated automatically
 	V6.2 by sebcbien added ptz placeholder
+	V 6.3 by Jojo (19/10/2017) : remove hardcoding of file name &&location
     Thread here:
     https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
     Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
@@ -15,10 +16,11 @@
  http://xxxxxx/get_snapshots/getVX.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
  */
 // Configuration 
-$user = "XXXXXXX";  // Synology username with rights to Surveillance station 
-$pass = "XXXXXXX";  // Password of the user entered above 
-$ip_ss = "192.168.XXX.XXX";  // IP-Adress of Synology Surveillance Station
+$user = "xxxxxx";  // Synology username with rights to Surveillance station 
+$pass = "xxxxxx";  // Password of the user entered above 
+$ip_ss = "192.168.xxx.xxx";  // IP-Adress of Synology Surveillance Station
 $ip = $_SERVER['SERVER_ADDR']; // IP-Adress of your Web server hosting this script
+$file = $_SERVER['PHP_SELF'];  // path& file name of this running php script
 $port = "5000";  // default port of Surveillance Station 
 $http = "http"; // Change to https if you use a secure connection
 $stream_type = $_GET['stream_type'];
@@ -28,7 +30,6 @@ $cameraPtz =  $_GET["ptz"];
 $list = $_GET["list"];
 $vCamera = 7; //Version API SYNO.SurveillanceStation.Camera
 $vAuth = ""; // 2; with 2, no images displayed, too fast logout problem ?  //Version de l' SYNO.API.Auth a utiliser
-$version = "V6"; 
 
 if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL) { 
     $list = "camera"; 
@@ -104,10 +105,10 @@ foreach($obj->data->cameras as $cam){
 	echo "<p>-----------------------------------------------------------------------------------------</p>";
 	echo "<p>Cam <b>". $nomCam ." (" . $id_cam . ")</b> detected</p>";
 	echo "<p>Vendor <b>". $vendor ." Model:(" . $model . ")</b></p>";
-	echo "<p> Snapshot on Stream Live: <a href=http://".$ip."/get_snapshots/get".$version.".php?stream_type=jpeg&camera=".$id_cam."&stream=0>http://".$ip."/get_snapshots/get".$version.".php?stream_type=jpeg&camera=".$id_cam."&stream=0</a></p>";
-	echo "<p> Snapshot on Stream Recording on Syno: <a href=http://".$ip."/get_snapshots/get".$version.".php?stream_type=jpeg&camera=".$id_cam."&stream=1>http://".$ip."/get_snapshots/get".$version.".php?stream_type=jpeg&camera=".$id_cam."&stream=1</a></p>";
-	echo "<p> Snapshot on Stream Mobile: <a href=http://".$ip."/get_snapshots/get".$version.".php?stream_type=jpeg&camera=".$id_cam."&stream=2>http://".$ip."/get_snapshots/get".$version.".php?stream_type=jpeg&camera=".$id_cam."&stream=2</a></p>";
-	echo "<p> Stream MJPEG: <a href=http://".$ip."/get_snapshots/get".$version.".php?stream_type=mjpeg&camera=".$id_cam.">http://".$ip."/get_snapshots/get".$version.".php?stream_type=mjpeg&camera=".$id_cam."</a></p>";
+	echo "<p> Snapshot on Stream Live: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=0>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=0</a></p>";
+	echo "<p> Snapshot on Stream Recording on Syno: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=1>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=1</a></p>";
+	echo "<p> Snapshot on Stream Mobile: <a href=http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=2>http://".$ip.$file."?stream_type=jpeg&camera=".$id_cam."&stream=2</a></p>";
+	echo "<p> Stream MJPEG: <a href=http://".$ip.$file."?stream_type=mjpeg&camera=".$id_cam.">http://".$ip.$file."?stream_type=mjpeg&camera=".$id_cam."</a></p>";
 	// http://diskstation412/get_mjpeg/getV1.php?cam=19&format=mjpeg
 	//check if cam is connected
 	if(!$cam->status) {
