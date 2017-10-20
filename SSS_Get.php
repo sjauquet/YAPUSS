@@ -5,16 +5,26 @@
 	V6.2 by sebcbien added ptz placeholder
 	V6.3 by Jojo (19/10/2017) : remove hardcoding of file name & location
 	V6.4 by Jojo (20/10/2017) : links are opened in a new tab
+	V7 by Sebcbien (21/10/2017) : Added enable/disable action
+	                              Changed file Name (SSS_Get.php)
+	
+	ToDo:
+	 - accept array of cameras form url arguments
+	 - start/stop manual recording
+	 - PTZ action
+	 
     Thread here:
     https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
     Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
     exemples:
- http://xxxxxx/get_snapshots/getVX.php - sans argument, réponds avec la liste de toutes les caméras
- http://xxxxxx/get_snapshots/getVX.php?list=json - réponds avec le json de toutes les caméras
- http://xxxxxx/get_snapshots/getVX.php?list=camera - affiche la liste de toutes les caméras, infos screenshots etc
- http://xxxxxx/get_snapshots/getVX.php?stream_type=jpeg&camera=19&stream=1 - retourne le snapshot de la caméra N° 19, stream N°1
+ http://xxxxxx/SSS_Get.php - sans argument, réponds avec la liste de toutes les caméras
+ http://xxxxxx/SSS_Get.php?list=json - réponds avec le json de toutes les caméras
+ http://xxxxxx/SSS_Get.php?list=camera - affiche la liste de toutes les caméras, infos screenshots etc
+ http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1 - retourne le snapshot de la caméra N° 19, stream N°1
  0: Live stream | 1: Recording stream | 2: Mobile stream  - valeur par défaut: 0 
- http://xxxxxx/get_snapshots/getVX.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
+ http://xxxxxx/SSS_Get.php?action=enable&camera=14 - enable camera 14
+ http://xxxxxx/SSS_Get.php?action=disable&camera=12 - disable camera 12
+ http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
  */
 // Configuration 
 $user = "xxxxxx";  // Synology username with rights to Surveillance station 
@@ -27,12 +37,13 @@ $http = "http"; // Change to https if you use a secure connection
 $stream_type = $_GET['stream_type'];
 $cameraID = $_GET['camera'];
 $cameraStream = $_GET["stream"];
-$cameraPtz =  $_GET["ptz"];
+$cameraPtz = $_GET["ptz"];
+$action = $_GET["action"];
 $list = $_GET["list"];
 $vCamera = 7; //Version API SYNO.SurveillanceStation.Camera
 $vAuth = ""; // 2; with 2, no images displayed, too fast logout problem ?  //Version de l' SYNO.API.Auth a utiliser
 
-if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL) { 
+if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL && $action == NULL) { 
     $list = "camera"; 
 } 
 
@@ -71,12 +82,13 @@ $sid = $obj->data->sid;
 //print $CamPath;
 
 // Get Snapshot
-if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL) { 
+if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) { 
 
 // Setting the correct header so the PHP file will be recognised as a JPEG file 
 	header('Content-Type: image/jpeg'); 
 // Read the contents of the snapshot and output it directly without putting it in memory first 
 	readfile($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?camStm='.$cameraStream.'&version='.$vCamera.'&cameraId='.$cameraID.'&api=SYNO.SurveillanceStation.Camera&preview=true&method=GetSnapshot&_sid='.$sid); 
+exit();
 }
 
 //print $list;
@@ -90,6 +102,7 @@ if ($list == "json") {
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
 	$obj = json_decode($json);
 	echo $json;
+exit();
 }
 
 if ($list == "camera") {
@@ -127,11 +140,45 @@ foreach($obj->data->cameras as $cam){
 		echo "<p>Cam " . $id_cam . " deconnected</p>";
 	}
 }
+exit();
 }
 
 if ($cameraPtz != NULL) {
 	echo "Camera PTZ argument: ".$cameraPtz."  --  Camera id: ".$cameraID;
-	
+exit();
+}
+
+if ($action != NULL) {
+//list of known cams 
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version=3&method=List&_sid='.$sid);
+	$obj = json_decode($json);
+
+	foreach($obj->data->cameras as $cam){
+	$id_cam = $cam->id;
+	$nomCam = $cam->detailInfo->camName;
+		//echo "cam ".$id_cam." ".$nomCam." Action: ".$action." cam (".$cameraID.")</p>";
+			//check if cam is activated or not
+		if($action == "disable" && $id_cam == $cameraID) {
+				//if cam already Disabled
+				if(!$cam->enabled) {
+					echo '{"id_cam":'.$id_cam.',"camName":"'.$nomCam.'","Status":"Disabled"}';
+					exit();
+				}
+				echo '{"id_cam":'.$id_cam.',"camName":"'.$nomCam.'","Status":"Disabled"}';
+				//Deactivate cam
+				$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&method=Disable&version=3&cameraIds='.$cameraID.'&_sid='.$sid);
+				exit();
+		}else if($action == "enable" && $id_cam == $cameraID) {
+				//if cam already Enabled
+				if($cam->enabled) {
+					echo '{"id_cam":'.$id_cam.',"camName":"'.$nomCam.'","Status":"Disabled"}';
+					exit();
+				}
+				echo '{"id_cam":'.$id_cam.',"camName":"'.$nomCam.'","Status":"Enabled"}';
+				$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&method=Enable&version=3&cameraIds='.$cameraID.'&_sid='.$sid);
+				exit();
+		}
+	}
 }
 
 // Get MJPEG
