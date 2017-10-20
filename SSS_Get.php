@@ -2,8 +2,9 @@
 /** 
     V6 By sebcbien, 18/10/2017
     V6.1 by Jojo (19/10/2017) : server IP adress generated automatically
+	V6.2 by sebcbien added ptz placeholder
     Thread here:
-   https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
+    https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
     Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
     exemples:
  http://xxxxxx/get_snapshots/getVX.php - sans argument, réponds avec la liste de toutes les caméras
@@ -14,21 +15,22 @@
  http://xxxxxx/get_snapshots/getVX.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
  */
 // Configuration 
-$user = "xxx";  // Synology username with rights to Surveillance station 
-$pass = "xxx";  // Password of the user entered above 
-$ip_ss = "192.168.xxx.xxx";  // IP-Adress of Synology Surveillance Station
+$user = "XXXXXXX";  // Synology username with rights to Surveillance station 
+$pass = "XXXXXXX";  // Password of the user entered above 
+$ip_ss = "192.168.XXX.XXX";  // IP-Adress of Synology Surveillance Station
+$ip = $_SERVER['SERVER_ADDR']; // IP-Adress of your Web server hosting this script
 $port = "5000";  // default port of Surveillance Station 
 $http = "http"; // Change to https if you use a secure connection
 $stream_type = $_GET['stream_type'];
 $cameraID = $_GET['camera'];
 $cameraStream = $_GET["stream"];
+$cameraPtz =  $_GET["ptz"];
 $list = $_GET["list"];
 $vCamera = 7; //Version API SYNO.SurveillanceStation.Camera
 $vAuth = ""; // 2; with 2, no images displayed, too fast logout problem ?  //Version de l' SYNO.API.Auth a utiliser
-$ip = $_SERVER['SERVER_ADDR']; // IP-Adress of your Web server hosting this script
 $version = "V6"; 
 
-if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL) { 
+if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL) { 
     $list = "camera"; 
 } 
 
@@ -67,7 +69,7 @@ $sid = $obj->data->sid;
 //print $CamPath;
 
 // Get Snapshot
-if ($cameraID != NULL && $stream_type == "jpeg") { 
+if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL) { 
 
 // Setting the correct header so the PHP file will be recognised as a JPEG file 
 	header('Content-Type: image/jpeg'); 
@@ -123,6 +125,11 @@ foreach($obj->data->cameras as $cam){
 		echo "<p>Cam " . $id_cam . " deconnected</p>";
 	}
 }
+}
+
+if ($cameraPtz != NULL) {
+	echo "Camera PTZ argument: ".$cameraPtz."  --  Camera id: ".$cameraID;
+	
 }
 
 // Get MJPEG
