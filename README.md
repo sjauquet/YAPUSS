@@ -23,7 +23,7 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
     Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
 
     examples:
-
+/** 
  http://xxxxxx/SSS_Get.php - sans argument, réponds avec la liste de toutes les caméras
  http://xxxxxx/SSS_Get.php?list=json - réponds avec le json de toutes les caméras
  http://xxxxxx/SSS_Get.php?list=camera - affiche la liste de toutes les caméras, infos screenshots etc
@@ -32,4 +32,4 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
  http://xxxxxx/SSS_Get.php?action=enable&camera=14 - enable camera 14
  http://xxxxxx/SSS_Get.php?action=disable&camera=12 - disable camera 12
  http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
-
+ */
