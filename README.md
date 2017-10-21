@@ -25,11 +25,11 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
     examples:
 
 http://xxxxxx/SSS_Get.php - sans argument, réponds avec la liste de toutes les caméras </p>
-http://xxxxxx/SSS_Get.php?list=json - réponds avec le json de toutes les caméras
-http://xxxxxx/SSS_Get.php?list=camera - affiche la liste de toutes les caméras, infos screenshots etc
-http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1 - retourne le snapshot de la caméra N° 19, stream N°1
-0: Live stream | 1: Recording stream | 2: Mobile stream  - valeur par défaut: 0 
-http://xxxxxx/SSS_Get.php?action=enable&camera=14 - enable camera 14
-http://xxxxxx/SSS_Get.php?action=disable&camera=12 - disable camera 12
-http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19
+http://xxxxxx/SSS_Get.php?list=json - réponds avec le json de toutes les caméras </p>
+http://xxxxxx/SSS_Get.php?list=camera - affiche la liste de toutes les caméras, infos screenshots etc </p>
+http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1 - retourne le snapshot de la caméra N° 19, stream N°1 </p>
+0: Live stream | 1: Recording stream | 2: Mobile stream  - valeur par défaut: 0  </p>
+http://xxxxxx/SSS_Get.php?action=enable&camera=14 - enable camera 14 </p>
+http://xxxxxx/SSS_Get.php?action=disable&camera=12 - disable camera 12 </p>
+http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19 </p>
 
