@@ -33,3 +33,4 @@ http://xxxxxx/SSS_Get.php?action=enable&camera=14 - enable camera 14 </p>
 http://xxxxxx/SSS_Get.php?action=disable&camera=12 - disable camera 12 </p>
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19 - retourne le flux mjpeg pour la caméra 19 </p>
 
+un petit test de contribution sur GitHub
