@@ -12,6 +12,8 @@
 	V9 by Jojo (20/11/2017) 	: takes screenshots and send them per e-mail as attachement
 							      & actions for all cameras
 							      & update menu
+	V10 by sebcbien (22/11/2017): Added PTZ function, small bug fixes
+								  & rearrange code for speed optimisation
 
 	ToDo:
 	 - accept array of cameras form url arguments
@@ -54,6 +56,7 @@
  http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail screenshot of camera 14
  http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail screenshot of ALL cameras
  http://xxxxxx/SSS_Get.php?action=mail                          - send per mail screenshot of ALL cameras
+ http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
  http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - retourne le flux mjpeg pour la caméra 19
  for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
 */
@@ -120,7 +123,7 @@ if ($action == "mail") {
 }
 
 // Default values
-if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL && $action == NULL) { 
+if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL && $action == NULL && $list == NULL) { 
     $list = "camera"; 
 } 
 
@@ -160,12 +163,7 @@ if($obj->success != "true"){
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.Camera');
 	$obj = json_decode($json);
 	$CamPath = $obj->data->{'SYNO.SurveillanceStation.Camera'}->path;
-	// echo $CamPath.'<br>';
-
-	//list & status of known cams 
-	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
-	$obj = json_decode($json);
-	$nbrCam = $obj->data->total;
+	//echo $CamPath.'<br>';
 
 	// Get Snapshot
 	if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) { 
@@ -176,17 +174,26 @@ if($obj->success != "true"){
 		exit();
 	}
 
-	// echo $list.'<br>';
 	// Get Camera List
 	if ($list == "json") {
-		echo "Json camera list viewer<br>";
+		echo "Json camera list viewer. Copy the Json below and paste it in this viewer:<br>";
 		echo "<a href=https://codebeautify.org/jsonviewer>https://codebeautify.org/jsonviewer</a><br>";
-
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
+		// echo $list.'<br>';
 		echo $json;
 		exit();
 	}
 
 	if ($list == "camera") {
+	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
+	$obj = json_decode($json);
+	$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+	
+	//list & status of known cams 
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
+	$obj = json_decode($json);
+	$nbrCam = $obj->data->total;
 		if ($nbrCam == 0) {
 			echo "No camera defined";
 			exit();
@@ -206,6 +213,8 @@ if($obj->success != "true"){
 			$nomCam = $cam->detailInfo->camName;
 			$vendor = $cam->vendor;
 			$model = $cam->model;
+			$ptzCap = $cam->ptzCap;
+
 			echo "-----------------------------------------------------------------------------------------<br>";
 			echo "Cam <b>".$nomCam." (".$id_cam.") ";
 			if ($cam->enabled) {
@@ -214,6 +223,16 @@ if($obj->success != "true"){
 				echo "disabled</b> --> <a href=http://".$ip.$file."?action=enable&camera=".$id_cam." target='_blank'>enable ?</a><br>";				
 			}
 			echo "Vendor <b>".$vendor." Model:(".$model.")</b><br>";
+			
+			if ($ptzCap > 263) {
+				echo "List of PTZ presets: <br>";
+				$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=ListPreset&version=1&cameraId='.$id_cam.'&_sid='.$sid);
+				$listPtz = json_decode($json);
+				foreach($listPtz->data->presets as $ptzId){
+					echo "id: ".$ptzId->id." Name: ".$ptzId->name."  --  URL: "."<a href=http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam." target='_blank'>http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam."</a><br>";
+					}
+			}
+			
 			//check if cam is connected
 			if (!$cam->status) {
 				//check if cam is activated and recording
@@ -228,7 +247,7 @@ if($obj->success != "true"){
 					}
 					echo "Send screenshot per e-mail ? : <a href=http://".$ip.$file."?action=mail&camera=".$id_cam." target='_blank'>http://".$ip.$file."?action=mail&camera=".$id_cam."</a><br>";
 					//showing a snapshot of the camera
-					echo "<img src='".$http."://".$ip_ss.":".$port."/webapi/".$CamPath."?api=SYNO.SurveillanceStation.Camera&version=".$vCamera."&method=GetSnapshot&preview=true&camStm=1&cameraId=".$id_cam."&_sid=".$sid."' alt='image JPG' width='480' height='360'><br>";				
+					echo "<img src='".$http."://".$ip_ss.":".$port."/webapi/".$CamPath."?api=SYNO.SurveillanceStation.Camera&version=".$vCamera."&method=GetSnapshot&preview=true&camStm=1&cameraId=".$id_cam."&_sid=".$sid."' alt='image JPG' width='480' height='360'><br>";
 				}
 			}
 		}
@@ -236,8 +255,14 @@ if($obj->success != "true"){
 	}
 
 	if ($cameraPtz != NULL) {
-		echo "Camera PTZ argument: ".$cameraPtz."  --  Camera id: ".$cameraID;
-		exit();
+	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
+		$obj = json_decode($json);
+		$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+		//echo $PtzPath.'<br>';
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
+		echo $json;
+	exit();
 	}
 
 	if ($action != NULL) {
