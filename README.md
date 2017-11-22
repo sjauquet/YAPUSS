@@ -17,6 +17,8 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
 	V9 by Jojo (20/11/2017) 	: takes screenshots and send them per e-mail as attachement
 							      & actions for all cameras
 							      & update menu
+	V10 by sebcbien (22/11/2017): Added PTZ function, small bug fixes
+								  & rearrange code for speed optimisation
 
 	ToDo:
 	 - accept array of cameras form url arguments
@@ -60,4 +62,5 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
  http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail screenshot of ALL cameras
  http://xxxxxx/SSS_Get.php?action=mail                          - send per mail screenshot of ALL cameras
  http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - retourne le flux mjpeg pour la caméra 19
+ http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
  for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
