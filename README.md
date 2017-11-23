@@ -40,26 +40,36 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
  
  	Exemples:
  	==========
- http://xxxxxx/SSS_Get.php                                      - sans argument, réponds avec la liste de toutes les caméras
- http://xxxxxx/SSS_Get.php?list=json                            - répond avec le json de toutes les caméras
- http://xxxxxx/SSS_Get.php?list=camera                          - affiche la liste de toutes les caméras, infos screenshots etc
- http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1  - retourne le snapshot de la caméra N° 19, stream N°1
-       0: Live stream | 1: Recording stream | 2: Mobile stream        - valeur par défaut: 0 
- http://xxxxxx/SSS_Get.php?action=enable&camera=14              - enable camera 14
- http://xxxxxx/SSS_Get.php?action=enable&camera=0               - enable ALL cameras
- http://xxxxxx/SSS_Get.php?action=enable                        - enable ALL cameras
- http://xxxxxx/SSS_Get.php?action=disable&camera=12             - disable camera 12
- http://xxxxxx/SSS_Get.php?action=disable&camera=0              - disable ALL cameras
- http://xxxxxx/SSS_Get.php?action=disable                       - disable ALL cameras
- http://xxxxxx/SSS_Get.php?action=start&camera=14               - start recording camera 14 (the camera is enabeled if disabeled)
- http://xxxxxx/SSS_Get.php?action=start&camera=0                - start recording ALL cameras (the desabled cameras are enabeled)
- http://xxxxxx/SSS_Get.php?action=start                         - start recording ALL cameras (the desabled cameras are enabeled)
- http://xxxxxx/SSS_Get.php?action=stop&camera=14                - stop recording camera 14
- http://xxxxxx/SSS_Get.php?action=stop&camera=0                 - stop recording ALL cameras
- http://xxxxxx/SSS_Get.php?action=stop                          - stop recording ALL cameras
- http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail screenshot of camera 14
- http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail screenshot of ALL cameras
- http://xxxxxx/SSS_Get.php?action=mail                          - send per mail screenshot of ALL cameras
- http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - retourne le flux mjpeg pour la caméra 19
- http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
- for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
+		- Main functions: Get Snapshot:
+ 	http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1  - returns a snapshot of camera Nr 19, stream Nr 1
+       	Stream argument: 0: Live stream | 1: Recording stream | 2: Mobile stream   (default value: 0)
+       		- Main functions: Get Mjpeg:
+ 	http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - returns a mjpeg stream of camera 19
+ 
+ 	Help function:
+ 	http://xxxxxx/SSS_Get.php                                      - Returns the list of all cameras with a snapshot, status, urls etc.
+ 	http://xxxxxx/SSS_Get.php?list=json                            - Returns a json with all cameras
+ 	http://xxxxxx/SSS_Get.php?list=camera                          - Returns the list of all cameras with a snapshot, status, urls etc.
+ 
+ 	Other functions:
+	- Enable/Disable Camera
+ 	http://xxxxxx/SSS_Get.php?action=enable&camera=14              - enable camera 14
+ 	http://xxxxxx/SSS_Get.php?action=enable&camera=0               - enable ALL cameras
+ 	http://xxxxxx/SSS_Get.php?action=enable                        - enable ALL cameras
+ 	http://xxxxxx/SSS_Get.php?action=disable&camera=12             - disable camera 12
+ 	http://xxxxxx/SSS_Get.php?action=disable&camera=0              - disable ALL cameras
+ 	http://xxxxxx/SSS_Get.php?action=disable                       - disable ALL cameras
+	- Start/Stop recording
+ 	http://xxxxxx/SSS_Get.php?action=start&camera=14               - start recording camera 14 (the camera is enabeled if disabeled)
+ 	http://xxxxxx/SSS_Get.php?action=start&camera=0                - start recording ALL cameras (the desabled cameras are enabeled)
+ 	http://xxxxxx/SSS_Get.php?action=start                         - start recording ALL cameras (the desabled cameras are enabeled)
+ 	http://xxxxxx/SSS_Get.php?action=stop&camera=14                - stop recording camera 14
+ 	http://xxxxxx/SSS_Get.php?action=stop&camera=0                 - stop recording ALL cameras
+ 	http://xxxxxx/SSS_Get.php?action=stop                          - stop recording ALL cameras
+	- Send Scrennshot by Email
+ 	http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail screenshot of camera 14
+ 	http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail screenshot of ALL cameras
+ 	http://xxxxxx/SSS_Get.php?action=mail                          - send per mail screenshot of ALL cameras
+	- PTZ function
+ 	http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
+ 	for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
