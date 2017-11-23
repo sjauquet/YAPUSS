@@ -17,10 +17,9 @@
 
 	ToDo:
 	 - accept array of cameras form url arguments
-	 - PTZ action
 	 - create external configuration file
 
-	Istallation instructions :
+	Installation instructions :
 	==========================
  	install php 7.0 on the Web server.
  	If you use Synology to send mails. you need to configure the notification in the control panel.
