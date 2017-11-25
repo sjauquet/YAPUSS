@@ -1,19 +1,20 @@
 <?php 
 /*
 V6 By sebcbien, 18/10/2017
-V6.1 by Jojo (19/10/2017) 	: server IP adress generated automatically
-V6.2 by sebcbien 			: added ptz placeholder
-V6.3 by Jojo (19/10/2017) 	: remove hardcoding of file name & location
-V6.4 by Jojo (20/10/2017) 	: links are opened in a new tab
-V7 by Sebcbien (21/10/2017) : Added enable/disable action
+V6.1 by Jojo (19/10/2017)		: server IP adress generated automatically
+V6.2 by sebcbien				: added ptz placeholder
+V6.3 by Jojo (19/10/2017)		: remove hardcoding of file name & location
+V6.4 by Jojo (20/10/2017)		: links are opened in a new tab
+V7 by Sebcbien (21/10/2017)		: Added enable/disable action
                               Changed file Name (SSS_Get.php)
-V8 by Jojo (25/10/2017) 	: add start/stop recording action
-						  	  & global review for alignments, comments, ...
-V9 by Jojo (20/11/2017) 	: takes screenshots and send them per e-mail as attachement
-						      & actions for all cameras
-						      & update menu
-V10 by sebcbien (22/11/2017): Added PTZ function, small bug fixes
-							  & rearrange code for speed optimisation
+V8 by Jojo (25/10/2017) 		: add start/stop recording action
+								& global review for alignments, comments, ...
+V9 by Jojo (20/11/2017) 		: takes screenshots and send them per e-mail as attachement
+								& actions for all cameras
+								& update menu
+V10 by sebcbien (22/11/2017):	Added PTZ function, small bug fixes
+								& rearrange code for speed optimisation
+V10.1 by sebcbien (25/11/2017):	correction bug actions.
 
 ToDo:
  - accept array of cameras form url arguments
@@ -275,6 +276,11 @@ if($obj->success != "true"){
 	}
 
 	if ($action != NULL) {
+		
+	//list & status of known cams 
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
+	$obj = json_decode($json);
+	
 		foreach($obj->data->cameras as $cam){
 			$id_cam = $cam->id;
 			$nomCam = $cam->detailInfo->camName;
