@@ -15,6 +15,7 @@ V9 by Jojo (20/11/2017) 		: takes screenshots and send them per e-mail as attach
 V10 by sebcbien (22/11/2017):	Added PTZ function, small bug fixes
 								& rearrange code for speed optimisation
 V10.1 by sebcbien (25/11/2017):	correction bug actions.
+v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization (use function)
 
 ToDo:
  - accept array of cameras form url arguments
@@ -90,7 +91,7 @@ for action=start & action=mail, adding the parameter '&enable=1' enable the disa
 		$to_name = "xxxxxx"; 							// nom destinataire
 		$subject = "Snapshot caméra";					// objet du mail
 // Last line of your configuration. DO not change bellow.
-
+		
 // auto configuration
 	$ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 	$file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
@@ -148,7 +149,7 @@ if ($stream_type == NULL) {
 if ($cameraID == NULL) {
 	$cameraID = 0;
 }
-
+$ptzCapTest = 0;
 //Get SYNO.API.Auth Path (recommended by Synology for further update)
 $json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.API.Auth');
 $obj = json_decode($json);
@@ -195,15 +196,13 @@ if($obj->success != "true"){
 	}
 
 	if ($list == "camera") {
-	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
-	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
-	$obj = json_decode($json);
-	$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
-	
-	//list & status of known cams 
-	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
-	$obj = json_decode($json);
-	$nbrCam = $obj->data->total;
+		//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
+		$obj = json_decode($json);
+		$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+		//list & status of known cams 
+		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
+		$nbrCam = $obj->data->total;
 		if ($nbrCam == 0) {
 			echo "No camera defined";
 			exit();
@@ -224,7 +223,6 @@ if($obj->success != "true"){
 			$vendor = $cam->vendor;
 			$model = $cam->model;
 			$ptzCap = $cam->ptzCap;
-
 			echo "-----------------------------------------------------------------------------------------<br>";
 			echo "Cam <b>".$nomCam." (".$id_cam.") ";
 			if ($cam->enabled) {
@@ -234,7 +232,7 @@ if($obj->success != "true"){
 			}
 			echo "Vendor <b>".$vendor." Model:(".$model.")</b><br>";
 			
-			if ($ptzCap > 263) {
+			if ($ptzCap > $ptzCapTest) {
 				echo "List of PTZ presets: <br>";
 				$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=ListPreset&version=1&cameraId='.$id_cam.'&_sid='.$sid);
 				$listPtz = json_decode($json);
@@ -272,14 +270,15 @@ if($obj->success != "true"){
 		//echo $PtzPath.'<br>';
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
 		echo $json;
-	exit();
+    	// on ferme la page qui vient d'être génrée
+    	echo "<script>window.close();</script>";
+		exit();
 	}
 
 	if ($action != NULL) {
 		
-	//list & status of known cams 
-	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
-	$obj = json_decode($json);
+		//list & status of known cams 
+		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
 	
 		foreach($obj->data->cameras as $cam){
 			$id_cam = $cam->id;
@@ -427,4 +426,13 @@ if($obj->success != "true"){
 
 }
 
+// Functions
+
+function ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid)
+{
+	//list & status of known cams 
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
+	$obj = json_decode($json);
+	return $obj;
+}
 ?>
