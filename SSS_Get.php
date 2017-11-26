@@ -39,8 +39,8 @@ Exemples:
 ==========
 	- Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1  - returns a snapshot of camera Nr 19, stream Nr 1
-   	Stream argument: 0: Live stream | 1: Recording stream | 2: Mobile stream   (default value: 0)
-   		- Main functions: Get Mjpeg:
+	Stream argument: 0: Live stream | 1: Recording stream | 2: Mobile stream   (default value: 0)
+		- Main functions: Get Mjpeg:
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - returns a mjpeg stream of camera 19
 
 Help function:
@@ -81,7 +81,8 @@ for action=start & action=mail, adding the parameter '&enable=1' enable the disa
 		$http = "http"; 								// Change to https if you use a secure connection
 		$vCamera = 7; 									// Version API SYNO.SurveillanceStation.Camera
 		$vAuth = ""; 									// Version de l' SYNO.API.Auth a utiliser
-														// 2; with 2, no images displayed, too fast logout problem ? 
+														// 2; with 2, no images displayed, too fast logout problem ?
+		$ptzCapTest = 263;								//Filter for some cameras declared with ptz capabilities but aren't.
 	// e-mail configuration
 		$from_mail = "xxxxxx"; 							// e-mail expediteur
 		$from_name = "xxxxxx"; 							// nom expéditeur
@@ -91,7 +92,7 @@ for action=start & action=mail, adding the parameter '&enable=1' enable the disa
 		$to_name = "xxxxxx"; 							// nom destinataire
 		$subject = "Snapshot caméra";					// objet du mail
 // Last line of your configuration. DO not change bellow.
-		
+
 // auto configuration
 	$ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 	$file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
@@ -135,21 +136,20 @@ if ($action == "mail") {
 
 // Default values
 if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL && $action == NULL && $list == NULL) { 
-    $list = "camera"; 
-} 
+	$list = "camera"; 
+}
 
 if ($cameraStream == NULL) { 
-    $cameraStream = "0"; 
-} 
+	$cameraStream = "0"; 
+}
 
 if ($stream_type == NULL) { 
-    $stream_type = "jpeg"; 
-} 
+	$stream_type = "jpeg"; 
+}
 
 if ($cameraID == NULL) {
 	$cameraID = 0;
 }
-$ptzCapTest = 0;
 //Get SYNO.API.Auth Path (recommended by Synology for further update)
 $json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.API.Auth');
 $obj = json_decode($json);
@@ -270,8 +270,8 @@ if($obj->success != "true"){
 		//echo $PtzPath.'<br>';
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
 		echo $json;
-    	// on ferme la page qui vient d'être génrée
-    	echo "<script>window.close();</script>";
+		// on ferme la page qui vient d'être génrée
+		echo "<script>window.close();</script>";
 		exit();
 	}
 
@@ -365,8 +365,8 @@ if($obj->success != "true"){
 				}
 			}
 		}
-    	// on ferme la page qui vient d'être génrée
-    	echo "<script>window.close();</script>";
+		// on ferme la page qui vient d'être génrée
+		echo "<script>window.close();</script>";
 	}
 
 	if ($action == "mail") {
