@@ -19,6 +19,7 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
 							      & update menu
 	V10 by sebcbien (22/11/2017): Added PTZ function, small bug fixes
 								  & rearrange code for speed optimisation
+	v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization (use funtion)
 
 	ToDo:
 	 - accept array of cameras form url arguments
