@@ -16,14 +16,17 @@ V10 by sebcbien (22/11/2017):	Added PTZ function, small bug fixes
 								& rearrange code for speed optimisation
 V10.1 by sebcbien (25/11/2017):	correction bug actions.
 v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization (use function)
+v11 by Jojo (23/12/2017) :		get configuration from external file
 
 ToDo:
  - accept array of cameras form url arguments
- - create external configuration file
 
 Installation instructions :
 ==========================
 install php 7.0 on the Web server.
+save this file with extension .php (example : SSS_Get.php)
+in the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
+
 If you use Synology to send mails. you need to configure the notification in the control panel.
 I share with you some strange behaviors.
 	1) When using GMAIL, even if the test mail notification was ok, this php mail was not send. => Solution is to re-do the autentication for Gmail in the notification Panel of the Synology. But after few hours / days it does not work anymore ...
@@ -39,8 +42,8 @@ Exemples:
 ==========
 	- Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1  - returns a snapshot of camera Nr 19, stream Nr 1
-	Stream argument: 0: Live stream | 1: Recording stream | 2: Mobile stream   (default value: 0)
-		- Main functions: Get Mjpeg:
+   	Stream argument: 0: Live stream | 1: Recording stream | 2: Mobile stream   (default value: 0)
+   		- Main functions: Get Mjpeg:
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - returns a mjpeg stream of camera 19
 
 Help function:
@@ -72,30 +75,30 @@ http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to
 for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
 */
 
-// Enter from this line your configuration
-	// Surveillance Station Configuration 
-		$user = "xxxxxx";  							// Synology username with rights to Surveillance station 
-		$pass = "xxxxxx";  							// Password of the user entered above 
-		$ip_ss = "192.168.xxx.xxx";  						// IP-Adress of Synology Surveillance Station
-		$port = "5000";  								// default port of Surveillance Station 
-		$http = "http"; 								// Change to https if you use a secure connection
-		$vCamera = 7; 									// Version API SYNO.SurveillanceStation.Camera
-		$vAuth = ""; 									// Version de l' SYNO.API.Auth a utiliser
-														// 2; with 2, no images displayed, too fast logout problem ?
-		$ptzCapTest = 263;								//Filter for some cameras declared with ptz capabilities but aren't.
-	// e-mail configuration
-		$from_mail = "xxxxxx"; 							// e-mail expediteur
-		$from_name = "xxxxxx"; 							// nom expéditeur
-		$reply_mail = "xxxxxx";							// e-mail réponse
-		$reply_name = "xxxxxx"; 						// nom réponse
-		$to_mail = "vxxxxxx";  							// e-mail destinataire
-		$to_name = "xxxxxx"; 							// nom destinataire
-		$subject = "Snapshot caméra";					// objet du mail
-// Last line of your configuration. DO not change bellow.
+// from .ini file (.ini file mut have the same name as the running script)
+$ini_array = parse_ini_file(substr($_SERVER['SCRIPT_NAME'], 1, -3).'ini');
+$user = $ini_array[user];
+$pass = $ini_array[pass];
+$ip_ss = $ini_array[ip_ss];
+$port = $ini_array[port];
+$http = $ini_array[http];
+$vCamera = $ini_array[vCamera];
+$vAuth = $ini_array[vAuth];
+$ptzCapTest = $ini_array[ptzCapTest];
+// e-mail configuration
+$from_mail = $ini_array[from_mail];
+$from_name = $ini_array[from_name];
+$reply_mail = $ini_array[reply_mail];
+$reply_name = $ini_array[reply_name];
+$to_mail = $ini_array[to_mail];
+$to_name = $ini_array[to_name];
+$subject = $ini_array[subject];
+$body = $ini_array[body];
+// end from .ini file
 
 // auto configuration
-	$ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
-	$file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
+$ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
+$file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
 
 // URL parameters
 $stream_type = $_GET['stream_type'];
@@ -130,26 +133,27 @@ if ($action == "mail") {
 		$message .= "Content-Transfer-Encoding: 8bit".$passage_ligne;
 		$message .= $passage_ligne;
 	// Message : texte
-		$message .= "Bonjour,<br>Veuillez trouver ci-joint les screenshots demandés.";
+		$message .= $body;
 		$message .= $passage_ligne;
 }
 
 // Default values
 if ($cameraStream == NULL && $stream_type == NULL && $cameraID == NULL && $cameraPtz == NULL && $action == NULL && $list == NULL) { 
-	$list = "camera"; 
-}
+    $list = "camera"; 
+} 
 
 if ($cameraStream == NULL) { 
-	$cameraStream = "0"; 
-}
+    $cameraStream = "0"; 
+} 
 
 if ($stream_type == NULL) { 
-	$stream_type = "jpeg"; 
-}
+    $stream_type = "jpeg"; 
+} 
 
 if ($cameraID == NULL) {
 	$cameraID = 0;
 }
+$ptzCapTest = 0;
 //Get SYNO.API.Auth Path (recommended by Synology for further update)
 $json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.API.Auth');
 $obj = json_decode($json);
@@ -219,7 +223,7 @@ if($obj->success != "true"){
 		//list of known cams 
 		foreach($obj->data->cameras as $cam){
 			$id_cam = $cam->id;
-			$nomCam = $cam->detailInfo->camName;
+			$nomCam = $cam->name;
 			$vendor = $cam->vendor;
 			$model = $cam->model;
 			$ptzCap = $cam->ptzCap;
@@ -230,7 +234,7 @@ if($obj->success != "true"){
 			} else {
 				echo "disabled</b> --> <a href=http://".$ip.$file."?action=enable&camera=".$id_cam." target='_blank'>enable ?</a><br>";				
 			}
-			echo "Vendor <b>".$vendor." Model:(".$model.")</b><br>";
+			echo "Vendor : <b>".$vendor."</b> - Model : <b>".$model."</b><br>";
 			
 			if ($ptzCap > $ptzCapTest) {
 				echo "List of PTZ presets: <br>";
@@ -270,8 +274,8 @@ if($obj->success != "true"){
 		//echo $PtzPath.'<br>';
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
 		echo $json;
-		// on ferme la page qui vient d'être génrée
-		echo "<script>window.close();</script>";
+    	// on ferme la page qui vient d'être génrée
+    	echo "<script>window.close();</script>";
 		exit();
 	}
 
@@ -365,8 +369,8 @@ if($obj->success != "true"){
 				}
 			}
 		}
-		// on ferme la page qui vient d'être génrée
-		echo "<script>window.close();</script>";
+    	// on ferme la page qui vient d'être génrée
+    	echo "<script>window.close();</script>";
 	}
 
 	if ($action == "mail") {
