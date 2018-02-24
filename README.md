@@ -26,6 +26,11 @@ v11 by Jojo (23/12/2017) :		get configuration from external file
 ToDo:
  - accept array of cameras form url arguments
 
+Known issues :
+==============
+the .php and the .ini file must be in the root of the WEB folder.
+We are working to correct this bug.
+
 Installation instructions :
 ==========================
 install php 7.0 on the Web server.
