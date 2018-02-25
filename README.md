@@ -1,41 +1,38 @@
 # YAPUSS
-YAPUSS - Passerelle "Universelle" Surveillance Station
-
-More info available here:
-
-https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/ (French forum)
-
+/*
 V6 By sebcbien, 18/10/2017
 V6.1 by Jojo (19/10/2017)		: server IP adress generated automatically
 V6.2 by sebcbien				: added ptz placeholder
 V6.3 by Jojo (19/10/2017)		: remove hardcoding of file name & location
 V6.4 by Jojo (20/10/2017)		: links are opened in a new tab
 V7 by Sebcbien (21/10/2017)		: Added enable/disable action
-                              Changed file Name (SSS_Get.php)
+                           	      & Changed file Name (SSS_Get.php)
 V8 by Jojo (25/10/2017) 		: add start/stop recording action
-								& global review for alignments, comments, ...
+								  & global review for alignments, comments, ...
 V9 by Jojo (20/11/2017) 		: takes screenshots and send them per e-mail as attachement
-								& actions for all cameras
-								& update menu
-V10 by sebcbien (22/11/2017):	Added PTZ function, small bug fixes
-								& rearrange code for speed optimisation
-V10.1 by sebcbien (25/11/2017):	correction bug actions.
-v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization (use function)
-v11 by Jojo (23/12/2017) :		get configuration from external file
+								  & actions for all cameras
+								  & update menu
+V10 by sebcbien (22/11/2017)	: Added PTZ function, small bug fixes
+								  & rearrange code for speed optimisation
+V10.1 by sebcbien (25/11/2017)	: correction bug actions.
+v10.2 by Jojo (25/11/2017) 		: correction bug list PTZ ids & code optimization (use function)
+v11 by Jojo (23/12/2017) 		: get configuration from external file
+v11.1 by Jojo (25/02/2018) 		: correctin bug if script not installed in web root folder
 
 ToDo:
  - accept array of cameras form url arguments
 
 Known issues :
 ==============
-the .php and the .ini file must be in the root of the WEB folder.
-We are working to correct this bug.
+none
 
 Installation instructions :
 ==========================
 install php 7.0 on the Web server.
 save this file with extension .php (example : SSS_Get.php)
 in the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
+
+The Synolpgy user refered in the .ini file must be MANAGER of all cameras.
 
 If you use Synology to send mails. you need to configure the notification in the control panel.
 I share with you some strange behaviors.
