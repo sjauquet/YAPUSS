@@ -6,33 +6,27 @@ V6.2 by sebcbien				: added ptz placeholder
 V6.3 by Jojo (19/10/2017)		: remove hardcoding of file name & location
 V6.4 by Jojo (20/10/2017)		: links are opened in a new tab
 V7 by Sebcbien (21/10/2017)		: Added enable/disable action
-                           	      & Changed file Name (SSS_Get.php)
+                              Changed file Name (SSS_Get.php)
 V8 by Jojo (25/10/2017) 		: add start/stop recording action
-								  & global review for alignments, comments, ...
+								& global review for alignments, comments, ...
 V9 by Jojo (20/11/2017) 		: takes screenshots and send them per e-mail as attachement
-								  & actions for all cameras
-								  & update menu
-V10 by sebcbien (22/11/2017)	: Added PTZ function, small bug fixes
-								  & rearrange code for speed optimisation
-V10.1 by sebcbien (25/11/2017)	: correction bug actions.
-v10.2 by Jojo (25/11/2017) 		: correction bug list PTZ ids & code optimization (use function)
-v11 by Jojo (23/12/2017) 		: get configuration from external file
-v11.1 by Jojo (25/02/2018) 		: correctin bug if script not installed in web root folder
-
+								& actions for all cameras
+								& update menu
+V10 by sebcbien (22/11/2017):	Added PTZ function, small bug fixes
+								& rearrange code for speed optimisation
+V10.1 by sebcbien (25/11/2017):	correction bug actions.
+v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization (use function)
+v11 by Jojo (23/12/2017) :		get configuration from external file
+v11.1 by Jojo (22/06/2018) :	add TimeStamps for display in logs
+v12 by Jojo (14/09/2018) :		add possibility to personnalize subject of the e-amil
 ToDo:
  - accept array of cameras form url arguments
-
-Known issues :
-==============
-none
 
 Installation instructions :
 ==========================
 install php 7.0 on the Web server.
 save this file with extension .php (example : SSS_Get.php)
 in the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
-
-The Synolpgy user refered in the .ini file must be MANAGER of all cameras.
 
 If you use Synology to send mails. you need to configure the notification in the control panel.
 I share with you some strange behaviors.
@@ -77,13 +71,14 @@ http://xxxxxx/SSS_Get.php?action=stop                          - stop recording 
 http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail screenshot of camera 14
 http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail screenshot of ALL cameras
 http://xxxxxx/SSS_Get.php?action=mail                          - send per mail screenshot of ALL cameras
+http://xxxxxx/SSS_Get.php?action=mail&subject=non default      - send per mail screenshot of ALL cameras with the non default subject on the mail
 - PTZ function
 http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
 for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
 */
 
 // from .ini file (.ini file mut have the same name as the running script)
-$ini_array = parse_ini_file(substr($_SERVER['SCRIPT_FILENAME'], 0, -3).'ini');
+$ini_array = parse_ini_file(substr($_SERVER['SCRIPT_NAME'], 1, -3).'ini');
 $user = $ini_array[user];
 $pass = $ini_array[pass];
 $ip_ss = $ini_array[ip_ss];
@@ -106,7 +101,7 @@ $body = $ini_array[body];
 // auto configuration
 $ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 $file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
-
+ 
 // URL parameters
 $stream_type = $_GET['stream_type'];
 $cameraID = $_GET['camera'];
@@ -115,6 +110,9 @@ $cameraPtz = $_GET["ptz"];
 $action = $_GET["action"];
 $enable = $_GET["enable"];
 $list = $_GET["list"];
+if ($_GET["subject"] != NULL) {
+	$subject = $_GET["subject"];
+}
 
 // e-mail preparation
 if ($action == "mail") {
@@ -211,6 +209,7 @@ if($obj->success != "true"){
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
 		$obj = json_decode($json);
 		$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
 		$nbrCam = $obj->data->total;
@@ -302,6 +301,7 @@ if($obj->success != "true"){
 				$camID = $cameraID;
 			}
 			if ($action == "disable" && $id_cam == $camID) {
+				TimeStamp();
 				//if cam already Disabled
 				if(!$enabled_cam) {
 				// if(!$cam->enabled) {
@@ -318,6 +318,7 @@ if($obj->success != "true"){
 				echo "-----------------------------------------------------------------------------------------<br>";
 				}
 			} else if ($action == "enable" && $id_cam == $camID) {
+				TimeStamp();
 				//if cam already Enabled
 				if($enabled_cam) {
 					echo 'Camera SS id : '.$id_cam.'<br>';
@@ -333,6 +334,7 @@ if($obj->success != "true"){
 				echo "-----------------------------------------------------------------------------------------<br>";
 				}
 			} else if (($action == "start" or $action == "stop") && $id_cam == $camID) {
+				TimeStamp();
 				echo 'Camera SS id : '.$id_cam.'<br>';
 				echo 'Camera SS Name : '.$nomCam.'<br>';
 				//if cam Disabled
@@ -353,6 +355,7 @@ if($obj->success != "true"){
 				echo "-----------------------------------------------------------------------------------------<br>";
 
 			} else if ($action == "mail" && $id_cam == $camID) {
+				TimeStamp();
 				//if cam Disabled
 				if (!$enabled_cam and $enable == 1) {
 					echo 'Status : Camera '.$id_cam.' - '.$nomCam.' is Disabled => Enabeling <br>';
@@ -384,7 +387,8 @@ if($obj->success != "true"){
 		// Fin du mail et Envoi
 		$message .= "--".$boundary."--";
 		mail($mail_to, $subject, $message, $entete);
-		echo "<br><b>Mail envoyé. </b><br>";
+		echo "<br><b>Sujet : </b>" . $subject . "<br>";
+		echo "<b>Mail envoyé. </b><br>";
 	}
 
 	// Get MJPEG
@@ -445,5 +449,10 @@ function ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid)
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
 	$obj = json_decode($json);
 	return $obj;
+}
+function TimeStamp()
+{
+	//Display TimeStamp in log
+	echo date('d\/m\/Y H\:i\:s').' <br> ';
 }
 ?>
