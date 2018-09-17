@@ -19,6 +19,8 @@ v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization 
 v11 by Jojo (23/12/2017) :		get configuration from external file
 v11.1 by Jojo (22/06/2018) :	add TimeStamps for display in logs
 v12 by Jojo (14/09/2018) :		add possibility to personnalize subject of the e-amil
+v13 by seb (16/09/2018) :		add elapsed time counter for debug purposes
+								solved bug ini file not parsed when YAPUSS script is not in the root folder
 ToDo:
  - accept array of cameras form url arguments
 
@@ -78,7 +80,7 @@ for action=start & action=mail, adding the parameter '&enable=1' enable the disa
 */
 
 // from .ini file (.ini file mut have the same name as the running script)
-$ini_array = parse_ini_file(substr($_SERVER['SCRIPT_NAME'], 1, -3).'ini');
+$ini_array = parse_ini_file(substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."ini");
 $user = $ini_array[user];
 $pass = $ini_array[pass];
 $ip_ss = $ini_array[ip_ss];
@@ -97,6 +99,8 @@ $to_name = $ini_array[to_name];
 $subject = $ini_array[subject];
 $body = $ini_array[body];
 // end from .ini file
+
+$debug = false;  /// !!!! With debug = true, snapshots cannot be streamed !!! set at true when in production or not needed !!
 
 // auto configuration
 $ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
@@ -158,16 +162,20 @@ if ($stream_type == NULL) {
 if ($cameraID == NULL) {
 	$cameraID = 0;
 }
-$ptzCapTest = 0;
+
+if ($debug) {echo time_elapsed("End of initialisation :");}
+// $ptzCapTest = 0; definied in .ini, remove ?
 //Get SYNO.API.Auth Path (recommended by Synology for further update)
 $json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.API.Auth');
 $obj = json_decode($json);
 $AuthPath = $obj->data->{'SYNO.API.Auth'}->path;
 //echo $AuthPath;
+if ($debug) {echo time_elapsed("Received Auth Path :");}
 
 // Authenticate with Synology Surveillance Station WebAPI and get our SID 
 $json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$AuthPath.'?api=SYNO.API.Auth&method=Login&version=6&account='.$user.'&passwd='.$pass.'&session=SurveillanceStation&format=sid'); 
 $obj = json_decode($json); 
+if ($debug) {echo time_elapsed("Received SID :");}
 
 //Check if auth ok
 if($obj->success != "true"){
@@ -184,7 +192,8 @@ if($obj->success != "true"){
 	$obj = json_decode($json);
 	$CamPath = $obj->data->{'SYNO.SurveillanceStation.Camera'}->path;
 	//echo $CamPath.'<br>';
-
+	if ($debug) {echo time_elapsed("Received Camera Path :");}
+	
 	// Get Snapshot
 	if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) { 
 		// Setting the correct header so the PHP file will be recognised as a JPEG file 
@@ -268,6 +277,7 @@ if($obj->success != "true"){
 					echo "<img src='".$http."://".$ip_ss.":".$port."/webapi/".$CamPath."?api=SYNO.SurveillanceStation.Camera&version=".$vCamera."&method=GetSnapshot&preview=true&camStm=1&cameraId=".$id_cam."&_sid=".$sid."' alt='image JPG' width='480' height='360'><br>";
 				}
 			}
+			echo time_elapsed("Processing untill here: ");
 		}
 		exit();
 	}
@@ -454,5 +464,11 @@ function TimeStamp()
 {
 	//Display TimeStamp in log
 	echo date('d\/m\/Y H\:i\:s').' <br> ';
+}
+function time_elapsed($affich)
+{
+	
+	$executionTime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+return "$affich "."$executionTime"."<br>";
 }
 ?>
