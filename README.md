@@ -70,7 +70,7 @@ http://xxxxxx/SSS_Get.php?action=start                         - start recording
 http://xxxxxx/SSS_Get.php?action=stop&camera=14                - stop recording camera 14
 http://xxxxxx/SSS_Get.php?action=stop&camera=0                 - stop recording ALL cameras
 http://xxxxxx/SSS_Get.php?action=stop                          - stop recording ALL cameras
-- Send Scrennshot by Email
+- Send Screenshot by Email
 http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail screenshot of camera 14
 http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail screenshot of ALL cameras
 http://xxxxxx/SSS_Get.php?action=mail                          - send per mail screenshot of ALL cameras
