@@ -6,12 +6,12 @@ V6.2 by sebcbien			: added ptz placeholder
 V6.3 by Jojo (19/10/2017)		: remove hardcoding of file name & location
 V6.4 by Jojo (20/10/2017)		: links are opened in a new tab
 V7 by Sebcbien (21/10/2017)		: Added enable/disable action
-                              Changed file Name (SSS_Get.php)
+                              		  Changed file Name (SSS_Get.php)
 V8 by Jojo (25/10/2017) 		: add start/stop recording action
-								& global review for alignments, comments, ...
+					  & global review for alignments, comments, ...
 V9 by Jojo (20/11/2017) 		: takes screenshots and send them per e-mail as attachement
-								& actions for all cameras
-								& update menu
+					  & actions for all cameras
+					  & update menu
 V10 by sebcbien (22/11/2017):	Added PTZ function, small bug fixes & rearrange code for speed optimisation
 V10.1 by sebcbien (25/11/2017):	correction bug actions.
 v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization (use function)
@@ -25,9 +25,9 @@ ToDo:
 ```
 # Installation instructions :
 ```php
-install php 7.0 on the Web server.
-save this file with extension .php (example : SSS_Get.php)
-in the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
+Install php 7.0 on the Web server.
+Save this file with extension .php (example : SSS_Get.php)
+In the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
 
 If you use Synology to send mails. you need to configure the notification in the control panel.
 I share with you some strange behaviors.
@@ -44,10 +44,10 @@ Thanks to all open sources examples grabbed all along the web and specially fill
 ```
 # Some Examples :
 ```php
-	- Main functions: Get Snapshot:
+- Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&stream=1  - returns a snapshot of camera Nr 19, stream Nr 1
-   	Stream argument: 0: Live stream | 1: Recording stream | 2: Mobile stream   (default value: 0)
-   		- Main functions: Get Mjpeg:
+	Stream arguments: 0->Live stream | 1->Recording stream | 2->Mobile stream   (default value: 0)
+- Main functions: Get Mjpeg Stream:
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - returns a mjpeg stream of camera 19
 
 Help function:
