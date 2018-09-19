@@ -61,11 +61,11 @@ http://xxxxxx/SSS_Get.php?action=saveSnapshot&camera=19&snapQual=0  - will write
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - Returns a mjpeg stream of camera 19
 	- Main function: Generate and write all available snapshots to disk (High Quality) and return one snapshot of a selected camera:
 		Typical use: ask this urls with one display . It will then act as scheduler. Then grab the writen image on disk with the other displays.
-http://xxxxxx/SSS_Get.php?list=AllSnapshots&snapQual=0&camera=1 
+http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0&camera=1 
 	Medium Quality:
-http://xxxxxx/SSS_Get.php?list=AllSnapshots&snapQual=1&camera=2.
+http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=1&camera=2.
 
-//Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?list=AllSnapshots&snapQual=0&camera=6)
+//Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
 
 Debug:
 http://xxxxxx/SSS_Get.php?action=ClearSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
@@ -304,7 +304,7 @@ if(!isset($_SESSION['sid'])){
 	}
 
 	// Write all available snapshots to disk CameraName-x.jpg x = camera id
-	if ($list == "AllSnapshots") {
+	if ($action == "AllSnapshots") {
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
 		$nbrCam = $obj->data->total;
@@ -327,12 +327,16 @@ if(!isset($_SESSION['sid'])){
 					$SnapshotUrl = $http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid;
 					$FileName = "Snapshot-Cam-".$id_cam.".jpg";
 					$ch = curl_init($SnapshotUrl);
+					//usleep(250000); // Wait 0.25 second
+					flock($fp, LOCK_EX); // acquire an exclusive lock
+					//ftruncate($fp, 0);   // truncate file
 					$fp = fopen($FileName, 'wb');
 					curl_setopt($ch, CURLOPT_FILE, $fp);
 					curl_setopt($ch, CURLOPT_HEADER, 0);
 					curl_exec($ch);
 					curl_close($ch);
 					fclose($fp);
+					flock($fp, LOCK_UN);// release the lock
 					//Display image
 					//echo "<img src='".$FileName."' alt='image JPG' width='480'><br>";
 				}
@@ -340,14 +344,15 @@ if(!isset($_SESSION['sid'])){
 			//echo $FileName." Saved to disk<br>";
 			//echo time_elapsed("Elapsed Processing time: ");
 		}
-		//Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?list=AllSnapshots&snapQual=0&camera=6)
+		//Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
 		ob_clean();
 		header('Content-Type: image/jpeg'); 
 		// Read the contents of the snapshot and output it directly without putting it in memory first 
-		readfile($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$cameraID.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid); 
+		readfile($http.'://'.$ip_ss.$dirname.'/Snapshot-Cam-'.$cameraID.'.jpg'); 
 		exit();
 	}
 
+	
 	if ($list == "camera") {
 		//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
@@ -366,8 +371,8 @@ if(!isset($_SESSION['sid'])){
 		}
 		echo "Actual <b>SID</b>: ".$sid."<br>Force SID Renew ? <a href=http://".$ip.$file."?action=ClearSID target='_blank'>http://".$ip.$file."?action=ClearSID </a><br>";
 		echo "<hr><u>Global Functions:</u><hr><br>";
-		echo "<b>Generate and write all available snapshots to disk (High Quality): </b><br><a href=http://".$ip.$file."?list=AllSnapshots&snapQual=0 target='_blank'>http://".$ip.$file."?list=AllSnapshots&snapQual=0 </a><br>";
-		echo "<b>Generate and write all available snapshots to disk (Medium Quality):</b><br><a href=http://".$ip.$file."?list=AllSnapshots&snapQual=1 target='_blank'>http://".$ip.$file."?list=AllSnapshots&snapQual=1 </a><br>";
+		echo "<b>Generate and write all available snapshots to disk (High Quality) and grap snapshot of CAM 1: </b><br><a href=http://".$ip.$file."?action=AllSnapshots&snapQual=0&camera=1 target='_blank'>http://".$ip.$file."?action=AllSnapshots&snapQual=0&camera=1 </a><br>";
+		echo "<b>Generate and write all available snapshots to disk (Medium Quality) and grap snapshot of CAM 2:</b><br><a href=http://".$ip.$file."?action=AllSnapshots&snapQual=1&camera=2 target='_blank'>http://".$ip.$file."?action=AllSnapshots&snapQual=1&camera=2 </a><br>";
 		echo "Gets All Cameras JSON: <a href=http://".$ip.$file."?list=json target='_blank'>http://".$ip.$file."?list=json </a><br>";
 		echo "Enable ALL cameras: <a href=http://".$ip.$file."?action=enable target='_blank'>http://".$ip.$file."?action=enable </a><br>";
 		echo "Disable ALL cameras: <a href=http://".$ip.$file."?action=disable target='_blank'>http://".$ip.$file."?action=disable </a><br>";
