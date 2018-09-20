@@ -30,7 +30,7 @@ ToDo:
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
 ```
 # Installation instructions :
-```php
+```txt
 Install php 7.0 on the Web server.
 Save this file with extension .php (example : SSS_Get.php)
 In the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
@@ -43,13 +43,13 @@ I share with you some strange behaviors.
 
 ```
 # Thread here :
-```php
+```txt
 https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
 Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
 
 ```
 # Some Examples :
-```php
+```txt
 - Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&snapQual=0  - will returns a snapshot of camera Nr 19, High Quality
 	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
