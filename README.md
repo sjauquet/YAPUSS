@@ -18,13 +18,13 @@ v10.2 by Jojo (25/11/2017) :    correction bug list PTZ ids & code optimization 
 v11   by Jojo (23/12/2017) :	get configuration from external file
 v11.1 by Jojo (22/06/2018) :	add TimeStamps for display in logs
 v12   by Jojo (14/09/2018) :	add possibility to personnalize subject of the e-amil
-v13   by seb (16/09/2018) :		add elapsed time counter for debug purposes
-								solved bug ini file not parsed when YAPUSS script is not in the root folder
-v14   by seb (18/09/2018) :		added method to re-use the SID between API calls
-								added method to clear SID (action=ClearSID)
-v15   by seb (19/09/2018) :		added method to write all available snapshots to disk (list=AllSnapshots)
-								resolved bug about snapshot quality not working (see more info in .ini file)
-								Cosmetic Work
+v13   by seb (16/09/2018) :	add elapsed time counter for debug purposes
+				solved bug ini file not parsed when YAPUSS script is not in the root folder
+v14   by seb (18/09/2018) :	added method to re-use the SID between API calls
+				added method to clear SID (action=ClearSID)
+v15   by seb (19/09/2018) :	added method to write all available snapshots to disk (list=AllSnapshots)
+				resolved bug about snapshot quality not working (see more info in .ini file)
+				Cosmetic Work
 ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
