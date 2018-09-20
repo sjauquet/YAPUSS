@@ -1,0 +1,1 @@
+O:8:"stdClass":3:{s:7:"CamPath";s:9:"entry.cgi";s:3:"sid";s:23:"JRJ8ich6Wf3HcCCL8N02873";s:8:"AuthPath";s:8:"auth.cgi";}
