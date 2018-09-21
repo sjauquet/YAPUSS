@@ -25,7 +25,7 @@ v14   by seb (18/09/2018) :	added method to re-use the SID between API calls
 v15   by seb (19/09/2018) :	added method to write all available snapshots to disk (list=AllSnapshots)
 				resolved bug about snapshot quality not working (see more info in .ini file)
 				Cosmetic Work
-v16   by seb (21/09/2018) : keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
+v16   by seb (21/09/2018) :	keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
 ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
