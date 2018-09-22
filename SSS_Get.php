@@ -139,8 +139,8 @@ $body = $ini_array[body];
 $ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 $file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
 $dirname = pathinfo($file, PATHINFO_DIRNAME);
-//$SessionFile = "SessionFile.txt";
-$SessionFile = getcwd().DIRECTORY_SEPARATOR."SessionFile.txt";
+//$SessionFile = getcwd().DIRECTORY_SEPARATOR."SessionFile.txt";
+$SessionFile = "SessionFile.txt";
 $SessionSave = (object)array();
 
 // URL parameters
@@ -260,10 +260,8 @@ if($sid != "") {
 		if ($debug) {echo time_elapsed("Received new SID : ");}
 	}
 }
-
 if ($debug) {echo time_elapsed("All Session Variables :");}
 if ($debug) {echo("<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
-
 //Re-Check if auth OK ----------------------------------------------------------------------------
 if($sid == ""){
 	echo "Error: Sid Not SET. Clearing file session and Exiting";
@@ -271,8 +269,7 @@ if($sid == ""){
 	// on ferme la page qui vient d'être générée
 	exit();
 }
-
-//SID Exists
+//OK, SID Exists
 	//Get Snapshot -------------------------------------------------------------------------------
 	if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) {
 		$id_cam = $cameraID;
