@@ -30,6 +30,8 @@ v15   by seb (19/09/2018) :	added method to write all available snapshots to dis
 				Cosmetic Work
 v16   by seb (21/09/2018) :	keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
 V16.1 by seb (22/09/2018) : 	added auto creation of SessionFile.txt if not present
+				WRITE Permission IS NEEDED by the web server to write session file.
+				CURL must be enabled in php option
 				check if getsnapshot failed, and then reset SID t oget a new one
 				cleaned up the code
 ToDo:
@@ -41,6 +43,8 @@ ToDo:
 # Installation instructions :
 ```php
 Install php 7.0 on the Web server.
+WRITE Permission IS NEEDED by the web server to write session file.
+PHP CURL must be enabled in php options
 Save this file with extension .php (example : SSS_Get.php)
 In the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
 
