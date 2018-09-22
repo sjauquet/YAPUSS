@@ -296,9 +296,10 @@ if($sid == ""){
 						$status = $cam->status;
 						//camStatus 0 … 4 Indicating the camera status • 0: Normal • 1: Disconnected • 2: Disabled • 3: Deleted • 4: Others
 						if ($status == 0 && $cam->enabled) {
-							echo "Camera ".$nomCam."IS enabled but not returning an image regenerating a new one<br><hr>";
-							echo "Returned value: ".$content;
-							//SessionSave("","","");
+							echo "Camera ".$nomCam." IS enabled but not returning an image regenerating a new one<br><hr>";
+							echo "Returned value: ".$content."<br>";
+							echo "You may check if this images can be served by surveillance station.<br> Example: stream 3 (low quality) is not always available<br>";
+							SessionSave("","","");
 							} else {
 							echo "camera status: ".$status."<br> if camera status <> 0, no image is ok.<br>";
 							echo "0: Normal <br> 1: Disconnected <br> 2: Disabled <br> 3: Deleted <br> 4: Others";
