@@ -28,7 +28,12 @@ v14   by seb (18/09/2018) :	added method to re-use the SID between API calls
 v15   by seb (19/09/2018) :	added method to write all available snapshots to disk (list=AllSnapshots)
 				resolved bug about snapshot quality not working (see more info in .ini file)
 				Cosmetic Work
-v16   by seb (21/09/2018) : keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
+v16   by seb (21/09/2018) : keep the same SID for all sessions. Script is now WAYYYY Faster and way less load on Surveillance Station
+V16.1 by seb (22/09/2018) : added auto creation of SessionFile.txt if not present
+							check if getsnapshot failed, and then reset SID t oget a new one
+							cleaned up the code
+
+
 ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
@@ -157,40 +162,10 @@ if ($action == "ResetSID") {
 	SessionSave("","","");
 	if ($debug) {echo "Echo after ResetSID: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
 	}
-//if ($debug) {echo "after WriteSID: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath;}
-
-function SessionRead() {
-	global $SessionFile, $CamPath, $sid, $AuthPath;
-	//Read the $SessionFile file to get the properties
-	if (file_exists($SessionFile)) {
-	$objData = file_get_contents($SessionFile);
-	$SessionSave = unserialize($objData);
-	if (!empty($SessionSave)) {
-		$CamPath = $SessionSave->CamPath;
-		$sid = $SessionSave->sid;
-		$AuthPath = $SessionSave->AuthPath;
-	}
-}
-}
-
-function SessionSave($FCamPath, $Fsid, $FAuthPath) {
-	global $SessionFile;
-	//Write Variables to text file $SessionFile
-	$SessionSave->CamPath = $FCamPath;
-	$SessionSave->sid = $Fsid;
-	$SessionSave->AuthPath = $FAuthPath;
-	$objData = serialize($SessionSave);
-	if (is_writable($SessionFile)) {
-		$fp = fopen($SessionFile, "w"); 
-		fwrite($fp, $objData); 
-		fclose($fp);
-	}
-}
 
 SessionRead();
-if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath;}
 
-//exit();
+if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath;}
 if ($debug) {echo "-------------------------------------------------------------------------------------------------------------<br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO FALSE IN THE CODE<br>      !!!!REMODE DEBUG WHEN CODE IS IN PRODUCTION !!!!<br>-------------------------------------------------------------------------------------------------------------<br>";}
 
 // e-mail preparation
@@ -240,94 +215,105 @@ if ($cameraID == NULL) {
 if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) {
 	$debug = false;
 	}
-//Récupère les variables session
-//$CamPath = $_SESSION['CamPath'];
-//$sid = $_SESSION['sid'];
 
 SessionRead();
-echo "recovered SID: ".$sid;
-
-//$AuthPath = $_SESSION['AuthPath'];
 
 if ($debug) {echo time_elapsed("End of initialisation :");}
-
 // Authenticate with Synology Surveillance Station WebAPI and get our SID 
-	//Check if session ID est valable, sinon regénère.
-	//le check API utilises beaucooup de temps, trouver un moyen de réduire avec un autre check api?
+	//Check if session ID if working. if not, getting a new one.
+	//The check API "cameralist" returns a huge json and uses a lot of time, try to find a new way to reducte with another API check?
 if($sid != "") {
-		if ($debug) {echo("Var session existantes:<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
-		//TESTER l'accès avec camera list json
-		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
-		$obj = json_decode($json);
-		if ($debug) {echo time_elapsed("OK - Passed Test SID Cameralist :");}
-		//Check if auth ok 
+	if ($debug) {echo("Var session existantes:<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
+	//TESTER l'accès avec camera list json
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
+	$obj = json_decode($json);
+		//Check if auth pas ok 
 		if($obj->success != "true"){
-			if ($debug) {echo "Error pas de bon sid, clearing session var<br>";}
+			SessionSave("","",""); // reset session file and exit
+			exit();
+		}
+	} else { //Get a new SID ------------------------------------------------------------------
+	//Get SYNO.API.Auth Path (recommended by Synology for further update)
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.API.Auth');
+	$obj = json_decode($json);
+	$AuthPath = $obj->data->{'SYNO.API.Auth'}->path;
+	if ($debug) {echo time_elapsed("Received Auth Path :");}
+	//Get SYNO.SurveillanceStation.Camera path (recommended by Synology for further update)
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.Camera');
+	$obj = json_decode($json);
+	$CamPath = $obj->data->{'SYNO.SurveillanceStation.Camera'}->path;
+	if ($debug) {echo time_elapsed("Received Camera Path :");}
+	//Get SID
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$AuthPath.'?api=SYNO.API.Auth&method=Login&version=6&account='.$user.'&passwd='.$pass.'&session=SurveillanceStation&format=sid'); 
+	$obj = json_decode($json); 
+	//Check if auth ok 
+	if($obj->success != "true"){
+		if ($debug) {echo "<br>";}
+		if ($debug) {echo time_elapsed("Error not a valid SID ! ");}
 			SessionSave("","","");
-			exit();
-		}
+		exit();
 	} else {
-		//sinon demander un nouveau
-		//Get SYNO.API.Auth Path (recommended by Synology for further update)
-		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.API.Auth');
-		$obj = json_decode($json);
-		$AuthPath = $obj->data->{'SYNO.API.Auth'}->path;
-		//$_SESSION['AuthPath'] = $AuthPath;
-		if ($debug) {echo time_elapsed("Received Auth Path :");}
-		//Get SYNO.SurveillanceStation.Camera path (recommended by Synology for further update)
-		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.Camera');
-		$obj = json_decode($json);
-		$CamPath = $obj->data->{'SYNO.SurveillanceStation.Camera'}->path;
-		//$_SESSION['CamPath'] = $CamPath;
-		if ($debug) {echo time_elapsed("Received Camera Path :");}
-		//Get SID
-		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$AuthPath.'?api=SYNO.API.Auth&method=Login&version=6&account='.$user.'&passwd='.$pass.'&session=SurveillanceStation&format=sid'); 
-		$obj = json_decode($json); 
-		//Check if auth ok 
-		if($obj->success != "true"){
-			if ($debug) {echo "error pas de bon sid<br>";}
-			if ($debug) {echo time_elapsed("Erreur Pas de SID : ");}
-				
-				
-				SessionSave("","","");
-				
-				
-			exit();
-		} else {
-			//authentification successful
-			$sid = $obj->data->sid;
-			if ($debug) {echo "New SID received. storing in session var: ".$sid."<br>";}
-			if ($debug) {echo time_elapsed("Received new SID : ");}
-			$sid = $obj->data->sid;
-			
-				SessionSave($CamPath,$sid,$AuthPath);
-		}
+		//authentification successful
+		$sid = $obj->data->sid;
+		$sid = $obj->data->sid;
+		SessionSave($CamPath,$sid,$AuthPath);
+		SessionRead();
+		if ($debug) {echo "New SID received. storing in session var: ".$sid."<br>";}
+		if ($debug) {echo time_elapsed("Received new SID : ");}
+	}
 }
 
-
-SessionRead();
-
 if ($debug) {echo time_elapsed("All Session Variables :");}
-if ($debug) {echo("Var session existantes:<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
+if ($debug) {echo("<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
 
-//Re- Check if auth ok
-//if($obj->success != "true"){
+//Re-Check if auth OK ----------------------------------------------------------------------------
 if($sid == ""){
-	echo "Error: Sid Not SET. Exiting";
+	echo "Error: Sid Not SET. Clearing file session and Exiting";
 	SessionSave("","","");
+	// on ferme la page qui vient d'être générée
 	exit();
-} else {
-	//authentification successful
-	// Get Snapshot
-	if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) { 
+}
+
+//SID Exists
+	//Get Snapshot -------------------------------------------------------------------------------
+	if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) {
 		$id_cam = $cameraID;
-		// Setting the correct header so the PHP file will be recognised as a JPEG file 
-		ob_clean();
-		header('Content-Type: image/jpeg'); 
-		// Read the contents of the snapshot and output it directly without putting it in memory first 
-		readfile($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid); 
-	}
-	// Save Snapshot
+		// Read the contents of the snapshot and output it directly without putting it in memory first
+		//$sid = "kubkjh";
+		ob_start();
+		$length = readfile($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid);
+		// remove the lengt from the output
+		$content = ob_get_clean();
+		//Check if length is not too low, else check if cam enabled, regenerate a new SID
+		if ($length <=50 ) {
+			echo "File length: ".$length."<BR>";
+			if ($debug) {echo time_elapsed("Error, NO SID : ");}
+			echo "File empty, probable SID problem, Checking if camera enabled<br>";
+			$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
+			//$cam = $obj->data->cameras->$cameraID
+				foreach($obj->data->cameras as $cam){
+					$id_cam2 = $cam->id;
+					if ($id_cam2 == $cameraID) {
+						$nomCam = $cam->name;
+						$status = $cam->status;
+						//camStatus 0 … 4 Indicating the camera status • 0: Normal • 1: Disconnected • 2: Disabled • 3: Deleted • 4: Others
+						if ($status == 0 && $cam->enabled) {
+							echo "Camera ".$nomCam."IS enabled but not returning an image regenerating a new one<br><hr>";
+							echo "Returned value: ".$content;
+							//SessionSave("","","");
+							} else {
+							echo "camera status: ".$status."<br> if camera status <> 0, no image is ok.<br>";
+							echo "0: Normal <br> 1: Disconnected <br> 2: Disabled <br> 3: Deleted <br> 4: Others";
+							}
+					}
+				}
+			} else {
+			// Setting the correct header so the PHP file will be recognised as a JPEG file 
+			header('Content-Type: image/jpeg'); 
+			echo $content;
+			}
+		}
+	// Save Snapshot -----------------------------------------------------------------------------
 	if ($cameraID != NULL && $action == "saveSnapshot" && $cameraPtz == NULL) { 
 		$id_cam = $cameraID;
 		// Setting the correct header so the PHP file will be recognised as a JPEG file 
@@ -343,8 +329,7 @@ if($sid == ""){
 		echo "success";
 		exit();
 	}
-	
-	// Get Camera List
+	// Get Camera List ---------------------------------------------------------------------------
 	if ($list == "json") {
 		echo "Json camera list viewer. Copy the Json below and paste it in this viewer:<br>";
 		echo "<a href=https://codebeautify.org/jsonviewer>https://codebeautify.org/jsonviewer</a><br>";
@@ -354,8 +339,7 @@ if($sid == ""){
 		echo $json;
 		exit();
 	}
-
-	// Write all available snapshots to disk CameraName-x.jpg x = camera id
+	// Write all available snapshots to disk CameraName-x.jpg x = camera id ----------------------
 	if ($action == "AllSnapshots") {
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
@@ -397,7 +381,6 @@ if($sid == ""){
 			//echo time_elapsed("Elapsed Processing time: ");
 		}
 		//Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
-		// ne pas répondre une image si cameraID est = 0
 		if ($cameraID != 0){
 		ob_clean();
 		header('Content-Type: image/jpeg'); 
@@ -407,7 +390,7 @@ if($sid == ""){
 		}
 		exit();
 	}
-
+	// create full information page --------------------------------------------------------------
 	if ($list == "camera") {
 		//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
@@ -459,7 +442,6 @@ if($sid == ""){
 					echo "id: ".$ptzId->id." Name: ".$ptzId->name."  --  URL: "."<a href=http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam." target='_blank'>http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam."</a><br>";
 					}
 			}
-			
 			//check if cam is connected
 			if (!$cam->status) {
 				//check if cam is activated and recording
@@ -478,8 +460,7 @@ if($sid == ""){
 						echo "<b>NOT recording...</b> --> <a href=http://".$ip.$file."?action=start&camera=".$id_cam." target='_blank'>start ?</a><br>";
 					}
 					echo "Send screenshot per e-mail ? : <a href=http://".$ip.$file."?action=mail&camera=".$id_cam." target='_blank'>http://".$ip.$file."?action=mail&camera=".$id_cam."</a><br>";
-					//showing a snapshot of the camera
-					//echo "<img src='".$http."://".$ip_ss.":".$port."/webapi/".$CamPath."?api=SYNO.SurveillanceStation.Camera&version=".$vCamera."&method=GetSnapshot&preview=true&camStm=1&cameraId=".$id_cam."&_sid=".$sid."' alt='image JPG' width='480' height='360'><br>";
+					echo "Press CTRL-F5 to refresh Snapshots<br>";
 					echo "<img src='".$http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid."' alt='image JPG' width='480'><br>";
 				}
 			}
@@ -488,7 +469,7 @@ if($sid == ""){
 		}
 		exit();
 	}
-
+	// Move camera to PTZ position ---------------------------------------------------------------
 	if ($cameraPtz != NULL) {
 	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
@@ -497,16 +478,14 @@ if($sid == ""){
 		//echo $PtzPath.'<br>';
 		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
 		echo $json;
-    	// on ferme la page qui vient d'être génrée
-    	echo "<script>window.close();</script>";
+		// on ferme la page qui vient d'être génrée
+		echo "<script>window.close();</script>";
 		exit();
 	}
-
+	// ACTIONS: Enable - Disable - START - STOP - Mail (Prepare) ---------------------------------
 	if ($action != NULL) {
-		
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
-	
 		foreach($obj->data->cameras as $cam){
 			$id_cam = $cam->id;
 			$nomCam = $cam->detailInfo->camName;
@@ -518,7 +497,7 @@ if($sid == ""){
 				$camID = $cameraID;
 			}
 			if ($action == "disable" && $id_cam == $camID) {
-				TimeStamp();
+				echo time_elapsed("Elapsed Processing time: ");
 				//if cam already Disabled
 				if(!$enabled_cam) {
 				// if(!$cam->enabled) {
@@ -535,7 +514,7 @@ if($sid == ""){
 				echo "-----------------------------------------------------------------------------------------<br>";
 				}
 			} else if ($action == "enable" && $id_cam == $camID) {
-				TimeStamp();
+				echo time_elapsed("Elapsed Processing time: ");
 				//if cam already Enabled
 				if($enabled_cam) {
 					echo 'Camera SS id : '.$id_cam.'<br>';
@@ -551,7 +530,7 @@ if($sid == ""){
 				echo "-----------------------------------------------------------------------------------------<br>";
 				}
 			} else if (($action == "start" or $action == "stop") && $id_cam == $camID) {
-				TimeStamp();
+				echo time_elapsed("Elapsed Processing time: ");
 				echo 'Camera SS id : '.$id_cam.'<br>';
 				echo 'Camera SS Name : '.$nomCam.'<br>';
 				//if cam Disabled
@@ -572,7 +551,7 @@ if($sid == ""){
 				echo "-----------------------------------------------------------------------------------------<br>";
 
 			} else if ($action == "mail" && $id_cam == $camID) {
-				TimeStamp();
+				echo time_elapsed("Elapsed Processing time: ");
 				//if cam Disabled
 				if (!$enabled_cam and $enable == 1) {
 					echo 'Status : Camera '.$id_cam.' - '.$nomCam.' is Disabled => Enabeling <br>';
@@ -599,7 +578,7 @@ if($sid == ""){
     	// on ferme la page qui vient d'être génrée
     	echo "<script>window.close();</script>";
 	}
-
+	// SEND MAIL ---------------------------------------------------------------------------------
 	if ($action == "mail") {
 		// Fin du mail et Envoi
 		$message .= "--".$boundary."--";
@@ -607,20 +586,15 @@ if($sid == ""){
 		echo "<br><b>Sujet : </b>" . $subject . "<br>";
 		echo "<b>Mail envoyé. </b><br>";
 	}
-
-	// Get MJPEG
+	// Get MJPEG ---------------------------------------------------------------------------------
 	if ($cameraID != NULL && $stream_type == "mjpeg") {
 		$link_stream = 'http://' . $ip_ss . ':' . $port . '/webapi/SurveillanceStation/videoStreaming.cgi?api=SYNO.SurveillanceStation.VideoStream&version=1&method=Stream&cameraId=' . $cameraID . '&format=mjpeg&_sid=' . $sid;
-
 		set_time_limit ( 60 ); 
-
 		$r = ""; 
 		$i = 0; 
 		$boundary = "\n--myboundary"; 
 		$new_boundary = "newboundary"; 
-
 		$f = fopen ( $link_stream, "r" ); 
-
 		if (! $f) { 
 			// **** cannot open 
 			echo "error <br>"; 
@@ -631,20 +605,16 @@ if($sid == ""){
 			header ( "Pragma: no-cache" ); 
 			header ( "Expires: -1" ); 
 			header ( "Content-type: multipart/x-mixed-replace;boundary={$new_boundary}" ); 
-
 			while ( true ) { 
-
 				while ( substr_count ( $r, "Content-Length:" ) != 2 ) { 
 					$r .= fread ( $f, 32 ); 
 				} 
-
 				$pattern = "/Content-Length\:\s([0-9]+)\s\n(.+)/i"; 
 				preg_match ( $pattern, $r, $matches, PREG_OFFSET_CAPTURE ); 
 				$start = $matches [2] [1]; 
 				$len = $matches [1] [0]; 
 				$end = strpos ( $r, $boundary, $start ) - 1; 
 				$frame = substr ( "$r", $start + 2, $len ); 
-
 				print "--{$new_boundary}\n"; 
 				print "Content-type: image/jpeg\n"; 
 				print "Content-Length: ${len}\n\n"; 
@@ -656,24 +626,63 @@ if($sid == ""){
 		fclose ( $f ); 
 	}
 
-}
-
 // Functions
-
-function ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid)
-{
-	//list & status of known cams 
+	// Read Session File -------------------------------------------------------------------------
+function SessionRead() {
+	global $SessionFile, $CamPath, $sid, $AuthPath;
+	//Read the $SessionFile file to get the properties
+	if (file_exists($SessionFile)) {
+	$objData = file_get_contents($SessionFile);
+	$SessionSave = unserialize($objData);
+		if (!empty($SessionSave)) {
+			$CamPath = $SessionSave->CamPath;
+			$sid = $SessionSave->sid;
+			$AuthPath = $SessionSave->AuthPath;
+		}
+	}
+}
+	// Write Session File to disk and create if not present --------------------------------------
+function SessionSave($FCamPath, $Fsid, $FAuthPath) {
+	global $SessionFile;
+	if (file_exists($SessionFile)) {
+		//Write Variables to text file $SessionFile
+		$SessionSave->CamPath = $FCamPath;
+		$SessionSave->sid = $Fsid;
+		$SessionSave->AuthPath = $FAuthPath;
+		$objData = serialize($SessionSave);
+		if (is_writable($SessionFile)) {
+			$fp = fopen($SessionFile, "w"); 
+			fwrite($fp, $objData); 
+			fclose($fp);
+		}
+	} else {
+		touch($SessionFile);
+		//Write Variables to text file $SessionFile
+		$SessionSave->CamPath = $FCamPath;
+		$SessionSave->sid = $Fsid;
+		$SessionSave->AuthPath = $FAuthPath;
+		$objData = serialize($SessionSave);
+		if (is_writable($SessionFile)) {
+			$fp = fopen($SessionFile, "w"); 
+			fwrite($fp, $objData); 
+			fclose($fp);
+		}
+	}
+}
+	//list & status of known cams ----------------------------------------------------------------
+function ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid) {
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
+	//echo $json;
 	$obj = json_decode($json);
 	return $obj;
 }
-function TimeStamp()
-{
+	// Time Stamp by JOJO (obsolete ?) -----------------------------------------------------------
+function TimeStamp() {
 	//Display TimeStamp in log
 	echo date('d\/m\/Y H\:i\:s').' <br> ';
 }
-function time_elapsed($affich)
-{
+	// To trace php execution time ---------------------------------------------------------------
+function time_elapsed($affich) {
 	
 	$executionTime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 return "$affich "." $executionTime"." Seconds <br>";
