@@ -139,6 +139,7 @@ $body = $ini_array[body];
 $ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 $file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
 $dirname = pathinfo($file, PATHINFO_DIRNAME);
+if ($dirname == "/") {$dirname = "";}
 //$SessionFile = getcwd().DIRECTORY_SEPARATOR."SessionFile.txt";
 $SessionFile = "SessionFile.txt";
 $SessionSave = (object)array();
@@ -163,9 +164,8 @@ if ($action == "ResetSID") {
 
 SessionRead();
 
-if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath;}
-if ($debug) {echo "-------------------------------------------------------------------------------------------------------------<br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO FALSE IN THE CODE<br>      !!!!REMODE DEBUG WHEN CODE IS IN PRODUCTION !!!!<br>-------------------------------------------------------------------------------------------------------------<br>";}
-
+if ($debug) {echo "------------------------------------------------------------------------------------------------------------- <br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO FALSE IN THE CODE<br>      !!!!REMOVE DEBUG=true WHEN CODE IS IN PRODUCTION !!!!<br> -------------------------------------------------------------------------------------------------------------<br>";}
+if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath."<br>";}
 // e-mail preparation
 if ($action == "mail") {
 	$mail_to = "\"$to_name\"<".$to_mail.">";
@@ -358,6 +358,7 @@ if($sid == ""){
 					//API 2.8 query for snapshot with working quality : http://192.168.1.1:5000/webapi/entry.cgi?version=9&id=18&api="SYNO.SurveillanceStation.Camera"&method="GetSnapshot"&profileType=0
 					$SnapshotUrl = $http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid;
 					$FileName = "Snapshot-Cam-".$id_cam.".jpg";
+					echo $filename;
 					$ch = curl_init($SnapshotUrl);
 					//usleep(250000); // Wait 0.25 second
 					//flock($fp, LOCK_EX); // acquire an exclusive lock
