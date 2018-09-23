@@ -1,50 +1,55 @@
 <?php 
-//session_start();
 /*
-# Version History :
-```
-V6   by sebcbien, 18/10/2017
-V6.1 by Jojo (19/10/2017):	server IP adress generated automatically
-V6.2 by sebcbien:			added ptz placeholder
-V6.3 by Jojo (19/10/2017):	remove hardcoding of file name & location
-V6.4 by Jojo (20/10/2017):	links are opened in a new tab
-V7   by Sebcbien (21/10/2017):	Added enable/disable action
+# YAPUSS - Yet Another Passerelle(bridge) Universelle Surveillance Station
+## Version History :
+```txt
+V6   by sebcbien (18/10/17)
+V6.1 by Jojo (19/10/2017)	:	server IP adress generated automatically
+V6.2 by Sebcbien:				added ptz placeholder
+V6.3 by Jojo (19/10/2017)	:	remove hardcoding of file name & location
+V6.4 by Jojo (20/10/2017)	:	links are opened in a new tab
+V7   by Sebcbien (21/10/17)	:	Added enable/disable action
 								Changed file Name (SSS_Get.php)
-V8   by Jojo (25/10/2017):	add start/stop recording action
-				& global review for alignments, comments, ...
-V9   by Jojo (20/11/2017):	takes screenshots and send them per e-mail as attachement
-					  & actions for all cameras
-					  & update menu
-V10   by seb (22/11/2017)  :	Added PTZ function, small bug fixes & rearrange code for speed optimisation
-V10.1 by seb (25/11/2017)  :	correction bug actions.
-v10.2 by Jojo (25/11/2017) :	correction bug list PTZ ids & code optimization (use function)
-v11   by Jojo (23/12/2017) :	get configuration from external file
-v11.1 by Jojo (22/06/2018) :	add TimeStamps for display in logs
-v12   by Jojo (14/09/2018) :	add possibility to personnalize subject of the e-amil
-v13   by seb (16/09/2018) :	add elapsed time counter for debug purposes
-				solved bug ini file not parsed when YAPUSS script is not in the root folder
-v14   by seb (18/09/2018) :	added method to re-use the SID between API calls
-				added method to clear SID (action=ClearSID)
-v15   by seb (19/09/2018) :	added method to write all available snapshots to disk (list=AllSnapshots)
-				resolved bug about snapshot quality not working (see more info in .ini file)
-				Cosmetic Work
-v16   by seb (21/09/2018) :	keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
-V16.1 by seb (22/09/2018) : 	added auto creation of SessionFile.txt if not present
-				WRITE Permission IS NEEDED by the web server to write session file.
-				CURL must be enabled in php option
-				check if getsnapshot failed, and then reset SID t oget a new one
-				cleaned up the code
-ToDo:
+V8   by Jojo (25/10/2017)	:	add start/stop recording action
+								& global review for alignments, comments, ...
+V9   by Jojo (20/11/2017)	:	takes screenshots and send them per e-mail as attachement
+								& actions for all cameras
+								& update menu
+V10   by seb (22/11/2017)	:	Added PTZ function, small bug fixes & rearrange code for speed optimisation
+V10.1 by seb (25/11/2017)	:	correction bug actions.
+v10.2 by Jojo (25/11/2017)	:	correction bug list PTZ ids & code optimization (use function)
+v11   by Jojo (23/12/2017)	:	get configuration from external file
+v11.1 by Jojo (22/06/2018)	:	add TimeStamps for display in logs
+v12   by Jojo (14/09/2018)	:	add possibility to personnalize subject of the e-amil
+v13   by seb (16/09/2018)	:	add elapsed time counter for debug purposes
+								& solve bug ini file not parsed when YAPUSS script is not in the root folder
+v14   by seb (18/09/2018)	:	add method to re-use the SID between API calls
+								& add method to clear SID (action=ClearSID)
+v15   by seb (19/09/2018)	:	add method to write all available snapshots to disk (list=AllSnapshots)
+								& resolve bug about snapshot quality not working (see more info in .ini file)
+								& Cosmetic Work
+v16   by seb (21/09/2018)	:	keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
+V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
+								& WRITE Permission IS NEEDED by the web server to write session file.
+								& CURL must be enabled in php option
+								& check if getsnapshot failed, and then reset SID to get a new one
+								& cleaned up the code
+v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
+
+# ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
  - Clean up code with faster check with PTZ at the beginning
  - Force refresh of snapshot on demo page
 ```
-# Installation instructions :
-```php
+## Requirements
+```txt
+PHP 7.0, altrough a previous version may work for some functionalities
+cURL extension (optional, for downloading snapshots and saving them to the web server)
+```
+## Installation instructions :
+```txt
 Install php 7.0 on the Web server.
-WRITE Permission IS NEEDED by the web server to write session file.
-PHP CURL must be enabled in php options
 Save this file with extension .php (example : SSS_Get.php)
 In the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
 
@@ -55,14 +60,14 @@ I share with you some strange behaviors.
 	3) I use now the SMTP of my mail provider : this is as fast as whith Gmail.
 
 ```
-# Thread here :
-```php
+## Thread here :
+```txt
 https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
 Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
 
 ```
-# Some Examples :
-```php
+## Some Examples :
+```txt
 - Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&snapQual=0  - will returns a snapshot of camera Nr 19, High Quality
 	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
@@ -71,9 +76,6 @@ http://xxxxxx/SSS_Get.php?action=saveSnapshot&camera=19&snapQual=0  - will write
 
 - Main functions: Get Mjpeg:
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - Returns a mjpeg stream of camera 19
-
-- Main function: Generate and write all available snapshots to disk (High Quality)
-http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0
 - Main function: Generate and write all available snapshots to disk (High Quality) and return one snapshot of a selected camera:
 		Typical use: ask this urls with one display . It will then act as scheduler. Then grab the writen image on disk with the other displays.
 http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0&camera=1 
@@ -83,7 +85,7 @@ http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=1&camera=2.
 Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
 
 Debug:
-http://xxxxxx/SSS_Get.php?action=?action=ResetSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
+http://xxxxxx/SSS_Get.php?action=ClearSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
 
 Help function:
 http://xxxxxx/SSS_Get.php                                      - Returns the list of all cameras with a snapshot, status, urls etc.
@@ -114,7 +116,15 @@ http://xxxxxx/SSS_Get.php?action=mail&subject=non default      - send per mail s
 http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
 for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
 ```
+## License
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 */
+
+$CodeVersion = "v16.2";
 
 // from .ini file (.ini file mut have the same name as the running script)
 $ini_array = parse_ini_file(substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."ini");
@@ -143,9 +153,8 @@ $body = $ini_array[body];
 $ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 $file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
 $dirname = pathinfo($file, PATHINFO_DIRNAME);
-if ($dirname == "/") {$dirname = "";}
-//$SessionFile = getcwd().DIRECTORY_SEPARATOR."SessionFile.txt";
-$SessionFile = "SessionFile.txt";
+	if ($dirname == "/") {$dirname = "";}
+$SessionFile = substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."session";
 $SessionSave = (object)array();
 
 // URL parameters
@@ -161,6 +170,8 @@ if ($_GET["subject"] != NULL) {
 	$subject = $_GET["subject"];
 }
 
+if ($debug) {echo "php code version: ".$CodeVersion."<br>";}
+
 if ($action == "ResetSID") {
 	SessionSave("","","");
 	if ($debug) {echo "Echo after ResetSID: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
@@ -168,8 +179,9 @@ if ($action == "ResetSID") {
 
 SessionRead();
 
-if ($debug) {echo "------------------------------------------------------------------------------------------------------------- <br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO FALSE IN THE CODE<br>      !!!!REMOVE DEBUG=true WHEN CODE IS IN PRODUCTION !!!!<br> -------------------------------------------------------------------------------------------------------------<br>";}
+if ($debug) {echo "------------------------------------------------------------------------------------------------------------- <br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO false IN THE CODE<br>      !!!!REMOVE debug = true WHEN CODE IS IN PRODUCTION !!!!<br> -------------------------------------------------------------------------------------------------------------<br>";}
 if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath."<br>";}
+
 // e-mail preparation
 if ($action == "mail") {
 	$mail_to = "\"$to_name\"<".$to_mail.">";
@@ -278,12 +290,11 @@ if($sid == ""){
 	if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) {
 		$id_cam = $cameraID;
 		// Read the contents of the snapshot and output it directly without putting it in memory first
-		//$sid = "kubkjh";
 		ob_start();
 		$length = readfile($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid);
 		// remove the lengt from the output
 		$content = ob_get_clean();
-		//Check if length is not too low, else check if cam enabled, regenerate a new SID
+		// Check if length is not too low, else check if cam enabled, regenerate a new SID
 		if ($length <=50 ) {
 			echo "File length: ".$length."<BR>";
 			if ($debug) {echo time_elapsed("Error, NO SID : ");}
@@ -483,7 +494,7 @@ if($sid == ""){
 		echo "<script>window.close();</script>";
 		exit();
 	}
-	// ACTIONS: Enable - Disable - START - STOP - Mail (Prepare) ---------------------------------
+	// ACTIONS: Enable - Disable - START - STOP - Mail (Prepare) - ARCHIVE --------------------------------
 	if ($action != NULL) {
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
@@ -505,14 +516,12 @@ if($sid == ""){
 					echo 'Camera SS id : '.$id_cam.'<br>';
 					echo 'Camera SS Name : '.$nomCam.'<br>';
 					echo 'Status : Camera already Disabled <br>';
-					echo "-----------------------------------------------------------------------------------------<br>";
 				} else {
 				//Deactivate cam
 				$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&method=Disable&version='.$vCamera.'&cameraIds='.$camID.'&_sid='.$sid);
 				echo 'Camera SS id : '.$id_cam.'<br>';
 				echo 'Camera SS Name : '.$nomCam.'<br>';
 				echo 'Status : Camera Disabled <br>';
-				echo "-----------------------------------------------------------------------------------------<br>";
 				}
 			} else if ($action == "enable" && $id_cam == $camID) {
 				echo time_elapsed("Elapsed Processing time: ");
@@ -521,14 +530,12 @@ if($sid == ""){
 					echo 'Camera SS id : '.$id_cam.'<br>';
 					echo 'Camera SS Name : '.$nomCam.'<br>';
 					echo 'Status : Camera already Enabled <br>';
-					echo "-----------------------------------------------------------------------------------------<br>";
 				} else {
 				//Activate cam
 				$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&method=Enable&version='.$vCamera.'&cameraIds='.$camID.'&_sid='.$sid);
 				echo 'Camera SS id : '.$id_cam.'<br>';
 				echo 'Camera SS Name : '.$nomCam.'<br>';
 				echo 'Status : Camera Enabled <br>';
-				echo "-----------------------------------------------------------------------------------------<br>";
 				}
 			} else if (($action == "start" or $action == "stop") && $id_cam == $camID) {
 				echo time_elapsed("Elapsed Processing time: ");
@@ -549,8 +556,6 @@ if($sid == ""){
 				} else {
 					echo 'Status : Camera is Disabled => no recording action <br>';
 				}
-				echo "-----------------------------------------------------------------------------------------<br>";
-
 			} else if ($action == "mail" && $id_cam == $camID) {
 				echo time_elapsed("Elapsed Processing time: ");
 				//if cam Disabled
@@ -574,7 +579,22 @@ if($sid == ""){
 					$message .= $passage_ligne;
 					echo "mail préparé pour caméraID: ".$id_cam."<br>";
 				}
+			} else if ($action == "archive" && id_cam == $camID) {
+				echo time_elapsed("Elapsed Processing time: ");
+				//if cam Disabled
+				if (!$enabled_cam and $enable == 1) {
+					echo 'Status : Camera '.$id_cam.' - '.$nomCam.' is Disabled => Enabeling <br>';
+					$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&method=Enable&version='.$vCamera.'&cameraIds='.$camID.'&_sid='.$sid);
+					sleep (5);  // wait 5 sec to finalyse the enabeling process
+					$enabled_cam = true;
+					echo 'Status : Camera '.$id_cam.' - '.$nomCam.' Enabled <br>';
+				}
+				if ($enabled_cam) {
+					$file_ArchiveName = "Camera_".$nomCam."_".strftime("%Y%m%d_%H%M%S");
+				}
+
 			}
+			echo "<hr>br>";
 		}
     	// on ferme la page qui vient d'être génrée
     	echo "<script>window.close();</script>";
@@ -676,11 +696,6 @@ function ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid) {
 	//echo $json;
 	$obj = json_decode($json);
 	return $obj;
-}
-	// Time Stamp by JOJO (obsolete ?) -----------------------------------------------------------
-function TimeStamp() {
-	//Display TimeStamp in log
-	echo date('d\/m\/Y H\:i\:s').' <br> ';
 }
 	// To trace php execution time ---------------------------------------------------------------
 function time_elapsed($affich) {
