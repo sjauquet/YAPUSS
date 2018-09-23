@@ -1,5 +1,6 @@
-# Version History :
-```
+# YAPUSS - Yet Another Passerelle(bridge) Universelle Surveillance Station
+## Version History :
+```txt
 V6   by sebcbien, 18/10/2017
 V6.1 by Jojo (19/10/2017):	server IP adress generated automatically
 V6.2 by sebcbien:			added ptz placeholder
@@ -36,7 +37,12 @@ ToDo:
  - Clean up code with faster check with PTZ at the beginning ?
  - Force refresh of snapshot on demo page
 ```
-# Installation instructions :
+## Requirements
+```txt
+PHP 7.0, altrough a previous version may work for some functionalities
+cURL extension (optional, for downloading snapshots and saving them to the web server)
+```
+## Installation instructions :
 ```txt
 Install php 7.0 on the Web server.
 Save this file with extension .php (example : SSS_Get.php)
@@ -49,13 +55,13 @@ I share with you some strange behaviors.
 	3) I use now the SMTP of my mail provider : this is as fast as whith Gmail.
 
 ```
-# Thread here :
+## Thread here :
 ```txt
 https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
 Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
 
 ```
-# Some Examples :
+## Some Examples :
 ```txt
 - Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&snapQual=0  - will returns a snapshot of camera Nr 19, High Quality
