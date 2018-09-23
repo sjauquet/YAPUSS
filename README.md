@@ -22,7 +22,7 @@ v12   by Jojo (14/09/2018)	:	add possibility to personnalize subject of the e-am
 v13   by seb (16/09/2018)	:	add elapsed time counter for debug purposes
 								& solve bug ini file not parsed when YAPUSS script is not in the root folder
 v14   by seb (18/09/2018)	:	add method to re-use the SID between API calls
-								& add method to clear SID (action=ClearSID)
+								& add method to reset SID (action=ResetSID)
 v15   by seb (19/09/2018)	:	add method to write all available snapshots to disk (list=AllSnapshots)
 								& resolve bug about snapshot quality not working (see more info in .ini file)
 								& Cosmetic Work
@@ -33,6 +33,9 @@ V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
 								& check if getsnapshot failed, and then reset SID to get a new one
 								& cleaned up the code
 v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
+v16.3 by Seb (23/09/2018)	:	cleared bug not showing snapshots when in debug mode. cleaning the code.
+v17 beta by Jojo (23/09/2018:	:	work in progress to add save snapshots with history
+v17.1 beta by Seb (24/09/2018)	:	Added status images sent to client when no image is available on SS
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -44,6 +47,7 @@ v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
 ```txt
 PHP 7.0, altrough a previous version may work for some functionalities
 cURL extension (optional, for downloading snapshots and saving them to the web server)
+WRITE Permission IS NEEDED by the web server to write session file.
 ```
 ## Installation instructions :
 ```txt
@@ -74,6 +78,8 @@ http://xxxxxx/SSS_Get.php?action=saveSnapshot&camera=19&snapQual=0  - will write
 
 - Main functions: Get Mjpeg:
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - Returns a mjpeg stream of camera 19
+- Main function: Generate and write all available snapshots to disk (High Quality)
+http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0
 - Main function: Generate and write all available snapshots to disk (High Quality) and return one snapshot of a selected camera:
 		Typical use: ask this urls with one display . It will then act as scheduler. Then grab the writen image on disk with the other displays.
 http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0&camera=1 
@@ -83,7 +89,7 @@ http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=1&camera=2.
 Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
 
 Debug:
-http://xxxxxx/SSS_Get.php?action=ClearSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
+http://xxxxxx/SSS_Get.php?action=ResetSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
 
 Help function:
 http://xxxxxx/SSS_Get.php                                      - Returns the list of all cameras with a snapshot, status, urls etc.
