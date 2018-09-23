@@ -36,6 +36,7 @@ V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
 								& cleaned up the code
 v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
 v16.3 by Seb (23/09/2018)	:	cleared bug not showing snapshots when in debug mode. cleaning the code.
+v17 beta by Jojo (23/09/2018:	work in progress to add save snapshots with history
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -127,7 +128,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 */
-$CodeVersion = "v17";
+$CodeVersion = "v17 beta";
 // from .ini file (.ini file mut have the same name as the running script)
 $ini_array = parse_ini_file(substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."ini");
 $user = $ini_array[user];
@@ -334,9 +335,9 @@ if($sid == ""){
 							} else {
 							echo "camera status: ".$status."<br> if camera status <> 0, no image is ok.<br>";
 							echo "0: Normal <br> 1: Disconnected <br> 2: Disabled <br> 3: Deleted <br> 4: Others";
-							ob_clean();
-							header('Content-Type: image/jpeg'); 
-							readfile($http.'://'.$ip_ss.$dirname.'/Camera-Disabled.png');
+							//ob_clean();
+							//header('Content-Type: image/jpeg'); 
+							//readfile($http.'://'.$ip_ss.$dirname.'/Camera-Disabled.png');
 							}
 					}
 				}
