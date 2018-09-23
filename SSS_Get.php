@@ -1,21 +1,3 @@
-Skip to content
- 
-Search or jump to…
-
-Pull requests
-Issues
-Marketplace
-Explore
- @sjauquet Sign out
-2
-1 1 sjauquet/YAPUSS
- Code  Issues 1  Pull requests 1  Projects 0  Wiki  Insights  Settings
-YAPUSS/SSS_Get.php
-b8c7b2b  6 minutes ago
-@vjooris vjooris Update SSS_Get.php
-@sjauquet @vjooris
-      
-740 lines (710 sloc)  36.5 KB
 <?php 
 //session_start();
 /*
@@ -53,14 +35,21 @@ V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
 								& check if getsnapshot failed, and then reset SID to get a new one
 								& cleaned up the code
 v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
+v16.3 by Seb (23/09/2018)	:	cleared bug not showing snapshots when in debug mode. cleaning the code.
+
 # ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
  - Clean up code with faster check with PTZ at the beginning
  - Force refresh of snapshot on demo page
 ```
-# Installation instructions :
-```php
+## Requirements
+```txt
+PHP 7.0, altrough a previous version may work for some functionalities
+cURL extension (optional, for downloading snapshots and saving them to the web server)
+```
+## Installation instructions :
+```txt
 Install php 7.0 on the Web server.
 WRITE Permission IS NEEDED by the web server to write session file.
 PHP CURL must be enabled in php options
@@ -72,13 +61,13 @@ I share with you some strange behaviors.
 	2) So I tried Yahoo! as SMTP provider, but the delivery of mails tooks a long time (several seconds/minutes)
 	3) I use now the SMTP of my mail provider : this is as fast as whith Gmail.
 ```
-# Thread here :
-```php
+## Thread here :
+```txt
 https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
 Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
 ```
-# Some Examples :
-```php
+## Some Examples :
+```txt
 - Main functions: Get Snapshot:
 http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&snapQual=0  - will returns a snapshot of camera Nr 19, High Quality
 	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
@@ -124,6 +113,12 @@ http://xxxxxx/SSS_Get.php?action=mail&subject=non default      - send per mail s
 http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
 for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
 ```
+## License
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 */
 $CodeVersion = "v17";
 // from .ini file (.ini file mut have the same name as the running script)
