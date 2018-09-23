@@ -1,8 +1,8 @@
 <?php 
-//session_start();
 /*
-# Version History :
-```
+# YAPUSS - Yet Another Passerelle(bridge) Universelle Surveillance Station
+## Version History :
+```txt
 V6   by sebcbien (18/10/17)
 V6.1 by Jojo (19/10/2017)	:	server IP adress generated automatically
 V6.2 by Sebcbien:				added ptz placeholder
@@ -47,24 +47,26 @@ v16.3 by Seb (23/09/2018)	:	cleared bug not showing snapshots when in debug mode
 ```txt
 PHP 7.0, altrough a previous version may work for some functionalities
 cURL extension (optional, for downloading snapshots and saving them to the web server)
+WRITE Permission IS NEEDED by the web server to write session file.
 ```
 ## Installation instructions :
 ```txt
 Install php 7.0 on the Web server.
-WRITE Permission IS NEEDED by the web server to write session file.
-PHP CURL must be enabled in php options
 Save this file with extension .php (example : SSS_Get.php)
 In the same folder, create the .ini file with the SAME name (except the extension) as this scirpt file (example : SSS_Get.ini)
+
 If you use Synology to send mails. you need to configure the notification in the control panel.
 I share with you some strange behaviors.
 	1) When using GMAIL, even if the test mail notification was ok, this php mail was not send. => Solution is to re-do the autentication for Gmail in the notification Panel of the Synology. But after few hours / days it does not work anymore ...
 	2) So I tried Yahoo! as SMTP provider, but the delivery of mails tooks a long time (several seconds/minutes)
 	3) I use now the SMTP of my mail provider : this is as fast as whith Gmail.
+
 ```
 ## Thread here :
 ```txt
 https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-surveillance-station/
 Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
+
 ```
 ## Some Examples :
 ```txt
@@ -73,6 +75,7 @@ http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&snapQual=0  - will returns 
 	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
 http://xxxxxx/SSS_Get.php?action=saveSnapshot&camera=19&snapQual=0  - will write on the server disk, (where the SSS_Get.php is stored) a snapshot of camera Nr 19, High Quality
 	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
+
 - Main functions: Get Mjpeg:
 http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - Returns a mjpeg stream of camera 19
 - Main function: Generate and write all available snapshots to disk (High Quality)
@@ -82,13 +85,17 @@ http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0
 http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0&camera=1 
 	Medium Quality:
 http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=1&camera=2.
+
 Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
+
 Debug:
-http://xxxxxx/SSS_Get.php?action=?action=ResetSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
+http://xxxxxx/SSS_Get.php?action=ResetSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
+
 Help function:
 http://xxxxxx/SSS_Get.php                                      - Returns the list of all cameras with a snapshot, status, urls etc.
 http://xxxxxx/SSS_Get.php?list=json                            - Returns a json with all cameras
 http://xxxxxx/SSS_Get.php?list=camera                          - Returns the list of all cameras with a snapshot, status, urls etc.
+
 Other functions:
 - Enable/Disable Camera
 http://xxxxxx/SSS_Get.php?action=enable&camera=14              - enable camera 14
@@ -143,6 +150,7 @@ $to_name = $ini_array[to_name];
 $subject = $ini_array[subject];
 $body = $ini_array[body];
 // end from .ini file
+
 // auto configuration
 $ip = $_SERVER['SERVER_ADDR']; 					// IP-Adress of your Web server hosting this script
 $file = $_SERVER['PHP_SELF'];  					// path & file name of this running php script
@@ -150,7 +158,8 @@ $dirname = pathinfo($file, PATHINFO_DIRNAME);	// relative path
 	if ($dirname == "/") {$dirname = "";}
 $dirnamefull = getcwd();						//full path : expl /volume1/web/...
 $SessionFile = substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."session";
-$SessionSave = (object)array();
+//$SessionSave = (object)array();
+
 // URL parameters
 $stream_type = $_GET['stream_type'];
 $cameraID = $_GET['camera'];
@@ -180,14 +189,14 @@ if ($action != NULL and $action == "archive") {
 		}
 	}
 }
-if ($debug) {echo "php code version: ".$CodeVersion."<br>";}
+if ($debug) {echo "if ($debug) {echo "YAPUSS php code version: ".$CodeVersion."<br>";}
 if ($action == "ResetSID") {
 	SessionSave("","","");
-	if ($debug) {echo "Echo after ResetSID: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
+	if ($debug) {echo "Status of variables after ResetSID execution: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
 	}
-SessionRead();
-if ($debug) {echo "------------------------------------------------------------------------------------------------------------- <br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO false IN THE CODE<br>      !!!!REMOVE debug = true WHEN CODE IS IN PRODUCTION !!!!<br> -------------------------------------------------------------------------------------------------------------<br>";}
-if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath."<br>";}
+
+
+
 // e-mail preparation
 if ($action == "mail") {
 	$mail_to = "\"$to_name\"<".$to_mail.">";
@@ -235,8 +244,12 @@ if ($cameraID == NULL) {
 if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action == NULL) {
 	$debug = false;
 	}
+
 SessionRead();
+if ($debug) {echo "<hr>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO false IN THE CODE<br>!!!!REMOVE debug = true WHEN CODE IS IN PRODUCTION !!!!<hr>";}
+if ($debug) {echo "<br>Status of variables BEFORE EXIT: <b>path:</b> ".$CamPath." <b>sid:</b> ".$sid." <b>auth:</b> ".$AuthPath."<br>";}
 if ($debug) {echo time_elapsed("End of initialisation :");}
+
 // Authenticate with Synology Surveillance Station WebAPI and get our SID 
 	//Check if session ID if working. if not, getting a new one.
 	//The check API "cameralist" returns a huge json and uses a lot of time, try to find a new way to reducte with another API check?
@@ -260,28 +273,29 @@ if($sid != "") {
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.Camera');
 	$obj = json_decode($json);
 	$CamPath = $obj->data->{'SYNO.SurveillanceStation.Camera'}->path;
-	if ($debug) {echo time_elapsed("Received Camera Path :");}
+	if ($debug) {echo time_elapsed("Received Camera Path. Asking Syno API for a new SID.");}
 	//Get SID
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$AuthPath.'?api=SYNO.API.Auth&method=Login&version=6&account='.$user.'&passwd='.$pass.'&session=SurveillanceStation&format=sid'); 
+	if ($debug) {echo time_elapsed("Json received: ".$json);}
 	$obj = json_decode($json); 
 	//Check if auth ok 
 	if($obj->success != "true"){
 		if ($debug) {echo "<br>";}
-		if ($debug) {echo time_elapsed("Error not a valid SID ! ");}
+		if ($debug) {echo time_elapsed("Error not a valid SID. Clearing the SID, please rety ! ");}
 			SessionSave("","","");
 		exit();
 	} else {
 		//authentification successful
 		$sid = $obj->data->sid;
-		$sid = $obj->data->sid;
+		if ($debug) {echo time_elapsed("New SID generated storing in .session file. Value: ".$sid);}
 		SessionSave($CamPath,$sid,$AuthPath);
 		SessionRead();
-		if ($debug) {echo "New SID received. storing in session var: ".$sid."<br>";}
-		if ($debug) {echo time_elapsed("Received new SID : ");}
+		if ($debug) {echo time_elapsed("Generated and Stored new SID. Test: ".$sid);}
+		exit();
 	}
 }
 if ($debug) {echo time_elapsed("All Session Variables :");}
-if ($debug) {echo("<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
+if ($debug) {echo time_elapsed("<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid);}
 //Re-Check if auth OK ----------------------------------------------------------------------------
 if($sid == ""){
 	echo "Error: Sid Not SET. Clearing file session and Exiting";
@@ -311,19 +325,24 @@ if($sid == ""){
 						$nomCam = $cam->name;
 						$status = $cam->status;
 						//camStatus 0 … 4 Indicating the camera status • 0: Normal • 1: Disconnected • 2: Disabled • 3: Deleted • 4: Others
-						if ($status == 0 && $cam->enabled) {
+							if ($status == 0 && $cam->enabled) {
 							echo "Camera ".$nomCam." IS enabled but not returning an image regenerating a new one<br><hr>";
 							echo "Returned value: ".$content."<br>";
 							echo "You may check if this images can be served by surveillance station.<br> Example: stream 3 (low quality) is not always available<br>";
+							echo "</b>BE CAREFULL, YAPUSS IS NOW REGENERATING A NEW SID .... THIS IS SLOWING DOWN THE SCRIPT</b><br>";
 							SessionSave("","","");
 							} else {
 							echo "camera status: ".$status."<br> if camera status <> 0, no image is ok.<br>";
 							echo "0: Normal <br> 1: Disconnected <br> 2: Disabled <br> 3: Deleted <br> 4: Others";
+							ob_clean();
+							header('Content-Type: image/jpeg'); 
+							readfile($http.'://'.$ip_ss.$dirname.'/Camera-Disabled.png');
 							}
 					}
 				}
 			} else {
-			// Setting the correct header so the PHP file will be recognised as a JPEG file 
+			// Setting the correct header so the PHP file will be recognised as a JPEG file
+			ob_clean();
 			header('Content-Type: image/jpeg'); 
 			echo $content;
 			}
@@ -372,6 +391,7 @@ if($sid == ""){
 				//check if cam is activated and recording
 				if($cam->enabled) {
 					//Write Image to Disk
+					//API 2.8 query for snapshot with working quality : http://192.168.1.1:5000/webapi/entry.cgi?version=9&id=18&api="SYNO.SurveillanceStation.Camera"&method="GetSnapshot"&profileType=0
 					$SnapshotUrl = $http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid;
 					$FileName = "Snapshot-Cam-".$id_cam.".jpg";
 					echo $filename;
@@ -412,7 +432,7 @@ if($sid == ""){
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
 		$nbrCam = $obj->data->total;
-		echo "<hr><u>Informations:</u><hr>";
+		echo "<u>Informations:</u><hr>";
 		if ($nbrCam == 0) {
 			echo "No camera defined";
 			exit();
@@ -668,6 +688,7 @@ echo "ok jusqu'ici";
 		}
 		fclose ( $f ); 
 	}
+
 // Functions
 	// Read Session File -------------------------------------------------------------------------
 function SessionRead() {
@@ -687,6 +708,11 @@ function SessionRead() {
 function SessionSave($FCamPath, $Fsid, $FAuthPath) {
 	global $SessionFile;
 	if (file_exists($SessionFile)) {
+		if ($debug) {echo time_elapsed("Saving new SID To .session :");}
+		$SessionSave = new stdClass();
+		$SessionSave->CamPath = new stdClass();
+		$SessionSave->sid = new stdClass();
+		$SessionSave->AuthPath = new stdClass();
 		//Write Variables to text file $SessionFile
 		$SessionSave->CamPath = $FCamPath;
 		$SessionSave->sid = $Fsid;
@@ -699,6 +725,10 @@ function SessionSave($FCamPath, $Fsid, $FAuthPath) {
 		}
 	} else {
 		touch($SessionFile);
+		$SessionSave = new stdClass();
+		$SessionSave->CamPath = new stdClass();
+		$SessionSave->sid = new stdClass();
+		$SessionSave->AuthPath = new stdClass();
 		//Write Variables to text file $SessionFile
 		$SessionSave->CamPath = $FCamPath;
 		$SessionSave->sid = $Fsid;
@@ -725,16 +755,3 @@ function time_elapsed($affich) {
 return "$affich "." $executionTime"." Seconds <br>";
 }
 ?>
-© 2018 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Help
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
-Press h to open a hovercard with more details.
