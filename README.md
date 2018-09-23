@@ -1,40 +1,43 @@
 # YAPUSS - Yet Another Passerelle(bridge) Universelle Surveillance Station
 ## Version History :
 ```txt
-V6   by sebcbien, 18/10/2017
-V6.1 by Jojo (19/10/2017):	server IP adress generated automatically
-V6.2 by sebcbien:			added ptz placeholder
-V6.3 by Jojo (19/10/2017):	remove hardcoding of file name & location
-V6.4 by Jojo (20/10/2017):	links are opened in a new tab
-V7   by Sebcbien (21/10/2017):	Added enable/disable action
+V6   by sebcbien (18/10/17)
+V6.1 by Jojo (19/10/2017)	:	server IP adress generated automatically
+V6.2 by Sebcbien:				added ptz placeholder
+V6.3 by Jojo (19/10/2017)	:	remove hardcoding of file name & location
+V6.4 by Jojo (20/10/2017)	:	links are opened in a new tab
+V7   by Sebcbien (21/10/17)	:	Added enable/disable action
 								Changed file Name (SSS_Get.php)
-V8   by Jojo (25/10/2017):	add start/stop recording action
-				& global review for alignments, comments, ...
-V9   by Jojo (20/11/2017):	takes screenshots and send them per e-mail as attachement
-					  & actions for all cameras
-					  & update menu
-V10   by seb (22/11/2017)  :	Added PTZ function, small bug fixes & rearrange code for speed optimisation
-V10.1 by seb (25/11/2017)  :	correction bug actions.
-v10.2 by Jojo (25/11/2017) :	correction bug list PTZ ids & code optimization (use function)
-v11   by Jojo (23/12/2017) :	get configuration from external file
-v11.1 by Jojo (22/06/2018) :	add TimeStamps for display in logs
-v12   by Jojo (14/09/2018) :	add possibility to personnalize subject of the e-amil
-v13   by seb (16/09/2018) :	add elapsed time counter for debug purposes
-				solved bug ini file not parsed when YAPUSS script is not in the root folder
-v14   by seb (18/09/2018) :	added method to re-use the SID between API calls
-				added method to clear SID (action=ClearSID)
-v15   by seb (19/09/2018) :	added method to write all available snapshots to disk (list=AllSnapshots)
-				resolved bug about snapshot quality not working (see more info in .ini file)
-				Cosmetic Work
-v16   by seb (21/09/2018) :	keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
-V16.1 by seb (22/09/2018) : 	added auto creation of SessionFile.txt if not present
-				check if getsnapshot failed, and then reset SID t oget a new one
-				cleaned up the code
+V8   by Jojo (25/10/2017)	:	add start/stop recording action
+								& global review for alignments, comments, ...
+V9   by Jojo (20/11/2017)	:	takes screenshots and send them per e-mail as attachement
+								& actions for all cameras
+								& update menu
+V10   by seb (22/11/2017)	:	Added PTZ function, small bug fixes & rearrange code for speed optimisation
+V10.1 by seb (25/11/2017)	:	correction bug actions.
+v10.2 by Jojo (25/11/2017)	:	correction bug list PTZ ids & code optimization (use function)
+v11   by Jojo (23/12/2017)	:	get configuration from external file
+v11.1 by Jojo (22/06/2018)	:	add TimeStamps for display in logs
+v12   by Jojo (14/09/2018)	:	add possibility to personnalize subject of the e-amil
+v13   by seb (16/09/2018)	:	add elapsed time counter for debug purposes
+								& solve bug ini file not parsed when YAPUSS script is not in the root folder
+v14   by seb (18/09/2018)	:	add method to re-use the SID between API calls
+								& add method to clear SID (action=ClearSID)
+v15   by seb (19/09/2018)	:	add method to write all available snapshots to disk (list=AllSnapshots)
+								& resolve bug about snapshot quality not working (see more info in .ini file)
+								& Cosmetic Work
+v16   by seb (21/09/2018)	:	keep the same SID for all sessions. Script is now WAYYYY Faster and les load on Surveillance Station
+V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
+								& WRITE Permission IS NEEDED by the web server to write session file.
+								& CURL must be enabled in php option
+								& check if getsnapshot failed, and then reset SID to get a new one
+								& cleaned up the code
+v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
 
-ToDo:
+# ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
- - Clean up code with faster check with PTZ at the beginning ?
+ - Clean up code with faster check with PTZ at the beginning
  - Force refresh of snapshot on demo page
 ```
 ## Requirements
