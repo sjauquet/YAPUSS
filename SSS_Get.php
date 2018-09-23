@@ -35,6 +35,7 @@ V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
 								& check if getsnapshot failed, and then reset SID to get a new one
 								& cleaned up the code
 v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
+v16.3 by Seb (23/09/2018)	:	cleared bug not showing snapshots when in debug mode. cleaning the code.
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -124,7 +125,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 */
 
-$CodeVersion = "v16.2";
+$CodeVersion = "v16.3";
 
 // from .ini file (.ini file mut have the same name as the running script)
 $ini_array = parse_ini_file(substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."ini");
@@ -155,7 +156,7 @@ $file = $_SERVER['PHP_SELF'];  					// path & file name of this running php scri
 $dirname = pathinfo($file, PATHINFO_DIRNAME);
 	if ($dirname == "/") {$dirname = "";}
 $SessionFile = substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."session";
-$SessionSave = (object)array();
+//$SessionSave = (object)array();
 
 // URL parameters
 $stream_type = $_GET['stream_type'];
@@ -170,17 +171,14 @@ if ($_GET["subject"] != NULL) {
 	$subject = $_GET["subject"];
 }
 
-if ($debug) {echo "php code version: ".$CodeVersion."<br>";}
+if ($debug) {echo "YAPUSS php code version: ".$CodeVersion."<br>";}
 
-if ($action == "ResetSID") {
+if ($action == "ClearSID") {
 	SessionSave("","","");
-	if ($debug) {echo "Echo after ResetSID: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
+	if ($debug) {echo "Status of variables after ClearSID execution: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
 	}
 
-SessionRead();
 
-if ($debug) {echo "------------------------------------------------------------------------------------------------------------- <br>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO false IN THE CODE<br>      !!!!REMOVE debug = true WHEN CODE IS IN PRODUCTION !!!!<br> -------------------------------------------------------------------------------------------------------------<br>";}
-if ($debug) {echo "<br>BEFORE EXIT: path: ".$CamPath." sid: ".$sid." auth: ".$AuthPath."<br>";}
 
 // e-mail preparation
 if ($action == "mail") {
@@ -231,8 +229,10 @@ if ($cameraID != NULL && $stream_type == "jpeg" && $cameraPtz == NULL && $action
 	}
 
 SessionRead();
-
+if ($debug) {echo "<hr>DEBUG ENABLED, TURN OFF BY SETTING VAR debug TO false IN THE CODE<br>!!!!REMOVE debug = true WHEN CODE IS IN PRODUCTION !!!!<hr>";}
+if ($debug) {echo "<br>Status of variables BEFORE EXIT: <b>path:</b> ".$CamPath." <b>sid:</b> ".$sid." <b>auth:</b> ".$AuthPath."<br>";}
 if ($debug) {echo time_elapsed("End of initialisation :");}
+
 // Authenticate with Synology Surveillance Station WebAPI and get our SID 
 	//Check if session ID if working. if not, getting a new one.
 	//The check API "cameralist" returns a huge json and uses a lot of time, try to find a new way to reducte with another API check?
@@ -256,28 +256,29 @@ if($sid != "") {
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.Camera');
 	$obj = json_decode($json);
 	$CamPath = $obj->data->{'SYNO.SurveillanceStation.Camera'}->path;
-	if ($debug) {echo time_elapsed("Received Camera Path :");}
+	if ($debug) {echo time_elapsed("Received Camera Path. Asking Syno API for a new SID.");}
 	//Get SID
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$AuthPath.'?api=SYNO.API.Auth&method=Login&version=6&account='.$user.'&passwd='.$pass.'&session=SurveillanceStation&format=sid'); 
+	if ($debug) {echo time_elapsed("Json received: ".$json);}
 	$obj = json_decode($json); 
 	//Check if auth ok 
 	if($obj->success != "true"){
 		if ($debug) {echo "<br>";}
-		if ($debug) {echo time_elapsed("Error not a valid SID ! ");}
+		if ($debug) {echo time_elapsed("Error not a valid SID. Clearing the SID, please rety ! ");}
 			SessionSave("","","");
 		exit();
 	} else {
 		//authentification successful
 		$sid = $obj->data->sid;
-		$sid = $obj->data->sid;
+		if ($debug) {echo time_elapsed("New SID generated storing in .session file. Value: ".$sid);}
 		SessionSave($CamPath,$sid,$AuthPath);
 		SessionRead();
-		if ($debug) {echo "New SID received. storing in session var: ".$sid."<br>";}
-		if ($debug) {echo time_elapsed("Received new SID : ");}
+		if ($debug) {echo time_elapsed("Generated and Stored new SID. Test: ".$sid);}
+		exit();
 	}
 }
 if ($debug) {echo time_elapsed("All Session Variables :");}
-if ($debug) {echo("<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid."<br>");}
+if ($debug) {echo time_elapsed("<br> CamPath: ".$CamPath."<br> AuthPath: ".$AuthPath."<br> SID: ".$sid);}
 //Re-Check if auth OK ----------------------------------------------------------------------------
 if($sid == ""){
 	echo "Error: Sid Not SET. Clearing file session and Exiting";
@@ -311,6 +312,7 @@ if($sid == ""){
 							echo "Camera ".$nomCam." IS enabled but not returning an image regenerating a new one<br><hr>";
 							echo "Returned value: ".$content."<br>";
 							echo "You may check if this images can be served by surveillance station.<br> Example: stream 3 (low quality) is not always available<br>";
+							echo "</b>BE CAREFULL, YAPUSS IS NOW REGENERATING A NEW SID .... THIS IS SLOWING DOWN THE SCRIPT</b><br>";
 							SessionSave("","","");
 							} else {
 							echo "camera status: ".$status."<br> if camera status <> 0, no image is ok.<br>";
@@ -319,7 +321,8 @@ if($sid == ""){
 					}
 				}
 			} else {
-			// Setting the correct header so the PHP file will be recognised as a JPEG file 
+			// Setting the correct header so the PHP file will be recognised as a JPEG file
+			ob_clean();
 			header('Content-Type: image/jpeg'); 
 			echo $content;
 			}
@@ -412,14 +415,14 @@ if($sid == ""){
 		//list & status of known cams 
 		$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
 		$nbrCam = $obj->data->total;
-		echo "<u>Informations:</u><hr><br>";
+		echo "<u>Informations:</u><hr>";
 		if ($nbrCam == 0) {
 			echo "No camera defined";
 			exit();
 		} else {
 			echo "Camera count: <b>".$nbrCam."</b><br>";
 		}
-		echo "Actual <b>SID</b>: ".$sid."<br>Force SID Renew ? <a href=http://".$ip.$file."?action=ResetSID target='_blank'>http://".$ip.$file."?action=ResetSID </a><br>";
+		echo "Actual <b>SID</b>: ".$sid."<br>Force SID Renew ? <a href=http://".$ip.$file."?action=ClearSID target='_blank'>http://".$ip.$file."?action=ClearSID </a><br>";
 		echo "<hr><u>Global Functions:</u><hr><br>";
 		echo "<b>Generate and write all available snapshots to disk (High Quality): </b><br><a href=http://".$ip.$file."?action=AllSnapshots&snapQual=0 target='_blank'>http://".$ip.$file."?action=AllSnapshots&snapQual=0 </a><br>";
 		echo "<b>Generate and write all available snapshots to disk (High Quality) and grap snapshot of CAM 1: </b><br><a href=http://".$ip.$file."?action=AllSnapshots&snapQual=0&camera=1 target='_blank'>http://".$ip.$file."?action=AllSnapshots&snapQual=0&camera=1 </a><br>";
@@ -594,7 +597,7 @@ if($sid == ""){
 				}
 
 			}
-			echo "<hr>br>";
+			echo "<hr><br>";
 		}
     	// on ferme la page qui vient d'être génrée
     	echo "<script>window.close();</script>";
@@ -666,6 +669,11 @@ function SessionRead() {
 function SessionSave($FCamPath, $Fsid, $FAuthPath) {
 	global $SessionFile;
 	if (file_exists($SessionFile)) {
+		if ($debug) {echo time_elapsed("Saving new SID To .session :");}
+		$SessionSave = new stdClass();
+		$SessionSave->CamPath = new stdClass();
+		$SessionSave->sid = new stdClass();
+		$SessionSave->AuthPath = new stdClass();
 		//Write Variables to text file $SessionFile
 		$SessionSave->CamPath = $FCamPath;
 		$SessionSave->sid = $Fsid;
@@ -678,6 +686,10 @@ function SessionSave($FCamPath, $Fsid, $FAuthPath) {
 		}
 	} else {
 		touch($SessionFile);
+		$SessionSave = new stdClass();
+		$SessionSave->CamPath = new stdClass();
+		$SessionSave->sid = new stdClass();
+		$SessionSave->AuthPath = new stdClass();
 		//Write Variables to text file $SessionFile
 		$SessionSave->CamPath = $FCamPath;
 		$SessionSave->sid = $Fsid;
