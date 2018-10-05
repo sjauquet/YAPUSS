@@ -1,5 +1,7 @@
 # YAPUSS - Yet Another Passerelle(bridge) Universelle Surveillance Station
 ## Version History :
+```txt YAPUSS - Yet Another Passerelle(bridge) Universelle Surveillance Station
+## Version History :
 ```txt
 V6   by sebcbien (18/10/17)
 V6.1 by Jojo (19/10/2017)	:	server IP adress generated automatically
@@ -33,9 +35,14 @@ V16.1 by seb (22/09/2018)	:	add auto creation of SessionFile.txt if not present
 								& check if getsnapshot failed, and then reset SID to get a new one
 								& cleaned up the code
 v16.2 by Jojo (23/09/2018)	:	rename SessionFile.txt to SSS_Get.session
-v16.3 by Seb (23/09/2018)	:	cleared bug not showing snapshots when in debug mode. cleaning the code.
-v17 beta by Jojo (23/09/2018:	:	work in progress to add save snapshots with history
-v17.1 beta by Seb (24/09/2018)	:	Added status images sent to client when no image is available on SS
+v16.3 by Seb (23/09/2018)	:	clear bug not showing snapshots when in debug mode. cleaning the code.
+v17.0b by Jojo (23/09/2018)	:	work in progress to add save snapshots with history
+v17.1b by Seb (24/09/2018)	:	Add status images sent to client when no image is available on SS
+v18 by Jojo (04/10/2018)	:	review/optimize code
+								& review/standadize actions
+								& review documentation
+								& add parameter debug=1
+								& add autorefresh (via .ini file ( v >= 3.0) or via parameter)
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -68,57 +75,59 @@ https://www.domotique-fibaro.fr/topic/11097-yapuss-passerelle-universelle-survei
 Thanks to all open sources examples grabbed all along the web and specially filliboy who made this script possible.
 
 ```
+## Syntax :
+```txt
+	- Snapshot quality: snapQual=0: High Quality | 1: Medium Quality | 2: Low Quality (if available) default is set in .ini: profileType
+
+	- action=
+		enable 		- enable camera
+		disable 	- disable camera
+		start 		- start recodring camera
+		stop 		- stop recording camera
+		snapshot 	- save camera snapchot (Snapshot-Cam-#.jpg in the script running folder)
+		archive 	- save camera snapshot to /Snapshots sub-folder with timestamp (Snapshot_#_<cam name>_yyyymmdd_hhmmss.jpg)
+		mail 		- send per e-mail a camera snapshot
+		ResetSID 	- force regeneration of a new sid. Should not be needed, an SID stays untill a reboot of the synology
+
+	  if camera=# provided : restrict the action to the specified cameera
+	  if camera=0|All or no camera specified : perform action for All cameras
+
+	  for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
+
+	- display=# : Send one image (of camera #) to the client & display
+
+	- Other functions :
+		Get Snapshot :	http://xxxxxx/SSS_Get.php?stream=jpeg&camera=#&snapQual=q   - returns snapshot of camera #, Quality q
+		Get Mjpeg :		http://xxxxxx/SSS_Get.php?stream=mjpeg&camera=#             - returns mjpeg stream of camera #
+		Debug :			http://xxxxxx/SSS_Get.php?debug=1							- run the script in debug mode
+		Refresh :		http://xxxxxx/SSS_Get.php?refresh=#							- refresh de home page every # sec/9999 to stop
+
+```
 ## Some Examples :
 ```txt
-- Main functions: Get Snapshot:
-http://xxxxxx/SSS_Get.php?stream_type=jpeg&camera=19&snapQual=0  - will returns a snapshot of camera Nr 19, High Quality
-	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
-http://xxxxxx/SSS_Get.php?action=saveSnapshot&camera=19&snapQual=0  - will write on the server disk, (where the SSS_Get.php is stored) a snapshot of camera Nr 19, High Quality
-	Select Snapshot quality: snapQual: 0: High Quality | 0: High Quality |2: Low Quality (if available) default is set in .ini: profileType
-
-- Main functions: Get Mjpeg:
-http://xxxxxx/SSS_Get.php?stream_type=mjpeg&camera=19          - Returns a mjpeg stream of camera 19
-- Main function: Generate and write all available snapshots to disk (High Quality)
-http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0
-- Main function: Generate and write all available snapshots to disk (High Quality) and return one snapshot of a selected camera:
-		Typical use: ask this urls with one display . It will then act as scheduler. Then grab the writen image on disk with the other displays.
-http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=0&camera=1 
-	Medium Quality:
-http://xxxxxx/SSS_Get.php?action=AllSnapshots&snapQual=1&camera=2.
-
-Send one image (of camera 6 in this example) to client who requested to write all snapshots to disk (SSS_Get.php?action=AllSnapshots&snapQual=0&camera=6)
-
-Debug:
-http://xxxxxx/SSS_Get.php?action=ResetSID                      - Will force regenerate a new sid. Should not be needed, an SID stays untill a reboot of the synology
+	http://xxxxxx/SSS_Get.php?action=snapshot&camera=19&snapQual=0 
+		Save snapshot of camera Nr 19 on disk (High Quality)
+	http://xxxxxx/SSS_Get.php?action=snapshot&snapQual=0
+		Save all available snapshots to disk (High Quality)
+	http://xxxxxx/SSS_Get.php?action=snapshot&snapQual=0&display=1 
+		Save all available snapshots to disk (High Quality) and return one snapshot of camera Nr 1.
+		(Typical use: ask this urls with one display . It will then act as scheduler. Then grab the writen image on disk with the other displays).
+	http://xxxxxx/SSS_Get.php?action=snapshot&snapQual=1&display=2.
+		Save all available snapshots to disk (Medium Quality) and return one snapshot of camera Nr 2.
+	http://xxxxxx/SSS_Get.php?action=enable&camera=14              - enable camera 14
+	http://xxxxxx/SSS_Get.php?action=enable&camera=0               - enable ALL cameras
+	http://xxxxxx/SSS_Get.php?action=enable&camera=0All            - enable ALL cameras
+	http://xxxxxx/SSS_Get.php?action=enable                        - enable ALL cameras
+	http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail snapshot of camera 14
+	http://xxxxxx/SSS_Get.php?action=mail&subject=non default      - send per mail snapshot of ALL cameras with the non default subject on the mail
 
 Help function:
-http://xxxxxx/SSS_Get.php                                      - Returns the list of all cameras with a snapshot, status, urls etc.
-http://xxxxxx/SSS_Get.php?list=json                            - Returns a json with all cameras
-http://xxxxxx/SSS_Get.php?list=camera                          - Returns the list of all cameras with a snapshot, status, urls etc.
+	http://xxxxxx/SSS_Get.php                                      - Returns the list of all cameras with a snapshot, status, urls etc.
+	http://xxxxxx/SSS_Get.php?list=json                            - Returns a json with all cameras
+	http://xxxxxx/SSS_Get.php?list=camera                          - Returns the list of all cameras with a snapshot, status, urls etc.
 
-Other functions:
-- Enable/Disable Camera
-http://xxxxxx/SSS_Get.php?action=enable&camera=14              - enable camera 14
-http://xxxxxx/SSS_Get.php?action=enable&camera=0               - enable ALL cameras
-http://xxxxxx/SSS_Get.php?action=enable                        - enable ALL cameras
-http://xxxxxx/SSS_Get.php?action=disable&camera=12             - disable camera 12
-http://xxxxxx/SSS_Get.php?action=disable&camera=0              - disable ALL cameras
-http://xxxxxx/SSS_Get.php?action=disable                       - disable ALL cameras
-- Start/Stop recording
-http://xxxxxx/SSS_Get.php?action=start&camera=14               - start recording camera 14 (the camera is enabeled if disabeled)
-http://xxxxxx/SSS_Get.php?action=start&camera=0                - start recording ALL cameras (the desabled cameras are enabeled)
-http://xxxxxx/SSS_Get.php?action=start                         - start recording ALL cameras (the desabled cameras are enabeled)
-http://xxxxxx/SSS_Get.php?action=stop&camera=14                - stop recording camera 14
-http://xxxxxx/SSS_Get.php?action=stop&camera=0                 - stop recording ALL cameras
-http://xxxxxx/SSS_Get.php?action=stop                          - stop recording ALL cameras
-- Send Snapshot by Email
-http://xxxxxx/SSS_Get.php?action=mail&camera=14                - send per mail snapshot of camera 14
-http://xxxxxx/SSS_Get.php?action=mail&camera=0                 - send per mail snapshot of ALL cameras
-http://xxxxxx/SSS_Get.php?action=mail                          - send per mail snapshot of ALL cameras
-http://xxxxxx/SSS_Get.php?action=mail&subject=non default      - send per mail snapshot of ALL cameras with the non default subject on the mail
-- PTZ function
-http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera to PTZ position id 5
-for action=start & action=mail, adding the parameter '&enable=1' enable the disabled camera before the action.
+PTZ function
+	http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera Nr 19 to PTZ position id 5
 ```
 ## License
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
