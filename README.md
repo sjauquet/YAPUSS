@@ -43,6 +43,7 @@ v18 by Jojo (04/10/2018)	:	review/optimize code
 								& review documentation
 								& add parameter debug=1
 								& add autorefresh (via .ini file ( v >= 3.0) or via parameter)
+v18.1 by Jojo (21/02/2019)	:	correct bug with PTZ
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -55,6 +56,8 @@ v18 by Jojo (04/10/2018)	:	review/optimize code
 PHP 7.0, altrough a previous version may work for some functionalities
 cURL extension (optional, for downloading snapshots and saving them to the web server)
 WRITE Permission IS NEEDED by the web server to write session file.
+User defined in the .ini file must be director of the cameras.
+
 ```
 ## Installation instructions :
 ```txt
