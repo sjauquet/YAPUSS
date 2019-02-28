@@ -43,6 +43,7 @@ v18 by Jojo (04/10/2018)	:	review/optimize code
 								& review documentation
 								& add parameter debug=1
 								& add autorefresh (via .ini file ( v >= 3.0) or via parameter)
+v18.1 by Jojo (21/02/2019)	:	correct bug with PTZ
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -55,6 +56,7 @@ v18 by Jojo (04/10/2018)	:	review/optimize code
 PHP 7.0, altrough a previous version may work for some functionalities
 cURL extension (optional, for downloading snapshots and saving them to the web server)
 WRITE Permission IS NEEDED by the web server to write session file.
+User defined in the .ini file must be director of the cameras.
 ```
 ## Installation instructions :
 ```txt
@@ -101,6 +103,7 @@ Thanks to all open sources examples grabbed all along the web and specially fill
 		Get Mjpeg :		http://xxxxxx/SSS_Get.php?stream=mjpeg&camera=#             - returns mjpeg stream of camera #
 		Debug :			http://xxxxxx/SSS_Get.php?debug=1							- run the script in debug mode
 		Refresh :		http://xxxxxx/SSS_Get.php?refresh=#							- refresh de home page every # sec/9999 to stop
+		Move Camera :	http://xxxxxx/SSS_Get.php?ptz=<position>&camera=<cameraID>  - move the <cameraID> to PTZ position <position>
 
 ```
 ## Some example :
@@ -127,7 +130,7 @@ Help function:
 	http://xxxxxx/SSS_Get.php?list=camera                          - Returns the list of all cameras with a snapshot, status, urls etc.
 
 PTZ function
-	http://xxxxxx/SSS_Get.php?ptz=5&camera=19                      - moves camera Nr 19 to PTZ position id 5
+	http://xxxxxx/SSS_Get.php?cameraPtz=5&camera=19                      - moves camera Nr 19 to PTZ position id 5
 
 ```
 ## License
@@ -138,7 +141,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 */
 
-$CodeVersion = "v18";
+$CodeVersion = "v18.1";
 
 // from .ini file (.ini file mut have the same name as the running script)
 $ini_array = parse_ini_file(substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."ini");
@@ -194,7 +197,9 @@ if ($stream == NULL && $cameraID == NULL && $cameraPtz == NULL && $action == NUL
 if ($cameraID == NULL) {
 	$cameraID = 0;
 }
-if ($stream == NULL) {$stream = "jpeg";}
+if ($stream == NULL) {
+	$stream = "jpeg";
+}
 $SnapDir = "Snapshots";
 
 // Debug Alert
@@ -534,6 +539,19 @@ if ($displayID != 0){
 }
 if ($action != NULL) {exit();}
 
+// Move camera to PTZ position ---------------------------------------------------------------
+if ($cameraPtz != NULL && $cameraID != 0) {
+	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
+	$obj = json_decode($json);
+	$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+	//echo $PtzPath.'<br>';
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
+	echo $json;
+	ClosePage();
+	exit();
+}
+
 // Stream
 if ($stream != NULL && $cameraID != 0) {
 	if ($stream == "jpeg") {
@@ -616,19 +634,6 @@ if ($stream != NULL && $cameraID != 0) {
 		}
 		fclose ( $f ); 
 	}
-	exit();
-}
-
-// Move camera to PTZ position ---------------------------------------------------------------
-if ($cameraPtz != NULL && $cameraID != 0) {
-	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
-	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
-	$obj = json_decode($json);
-	$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
-	//echo $PtzPath.'<br>';
-	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=GoPreset&version=1&cameraId='.$cameraID.'&presetId='.$cameraPtz.'&_sid='.$sid);
-	echo $json;
-	ClosePage();
 	exit();
 }
 
