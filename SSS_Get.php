@@ -44,7 +44,8 @@ v18 by Jojo (04/10/2018)	:	review/optimize code
 								& add parameter debug=1
 								& add autorefresh (via .ini file ( v >= 3.0) or via parameter)
 v18.1 by Jojo (21/02/2019)	:	correct bug with PTZ
-
+v19.0 by Jojo (xx/03/2019)	:	add zoom in/out
+								& add patrol
 # ToDo:
  - accept array of cameras form url arguments
  - find a quicker test to check if api access is ok (retreiving json of cameras takes 0,5 second)
@@ -103,7 +104,9 @@ Thanks to all open sources examples grabbed all along the web and specially fill
 		Get Mjpeg :		http://xxxxxx/SSS_Get.php?stream=mjpeg&camera=#             - returns mjpeg stream of camera #
 		Debug :			http://xxxxxx/SSS_Get.php?debug=1							- run the script in debug mode
 		Refresh :		http://xxxxxx/SSS_Get.php?refresh=#							- refresh de home page every # sec/9999 to stop
-		Move Camera :	http://xxxxxx/SSS_Get.php?ptz=<position>&camera=<cameraID>  - move the <cameraID> to PTZ position <position>
+		Move Camera :	http://xxxxxx/SSS_Get.php?ptz=<position>&camera=#		    - move camera # to PTZ position <position>
+		Patrol Camera :	http://xxxxxx/SSS_Get.php?patrol=<patrol>&camera=#			- patrol camera # according to patrol def <patrol>
+		Zoom Camera :	http://xxxxxx/SSS_Get.php?zoom=in|out|inTot|outTot&camera=# - zoom camera # in|out|inTot|outTot
 
 ```
 ## Some example :
@@ -130,7 +133,7 @@ Help function:
 	http://xxxxxx/SSS_Get.php?list=camera                          - Returns the list of all cameras with a snapshot, status, urls etc.
 
 PTZ function
-	http://xxxxxx/SSS_Get.php?cameraPtz=5&camera=19                      - moves camera Nr 19 to PTZ position id 5
+	http://xxxxxx/SSS_Get.php?cameraPtz=5&camera=19                - moves camera Nr 19 to PTZ position id 5
 
 ```
 ## License
@@ -141,7 +144,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 */
 
-$CodeVersion = "v18.1";
+$CodeVersion = "v19.0";
 
 // from .ini file (.ini file mut have the same name as the running script)
 $ini_array = parse_ini_file(substr(basename($_SERVER['SCRIPT_NAME']).PHP_EOL, 0, -4)."ini");
@@ -181,6 +184,8 @@ $stream = $_GET['stream'];
 $cameraID = $_GET['camera'];
 $displayID = $_GET['display'];
 $cameraPtz = $_GET["ptz"];
+$cameraPatrol = $_GET["patrol"];
+$cameraZoom = $_GET["zoom"];
 $action = $_GET["action"];
 $enable = $_GET["enable"];
 $list = $_GET["list"];
@@ -277,14 +282,14 @@ if ($list == "camera") {
 	echo("<meta http-equiv='refresh' content='".$refresh."'>"); //Refresh by HTTP META
 
 	//
-	echo "<u>Informations:</u><hr>";
+	echo "<u>Informations :</u><hr>";
 	if ($nbrCam == 0) {
-		echo "No camera defined";
+		echo "No camera defined.";
 		exit();
 	} else {
-		echo "Camera count: <b>".$nbrCam."</b><br>";
+		echo "Camera count : <b>".$nbrCam."</b><br>";
 	}
-	echo "Actual <b>SID</b>: ".$sid."<br>";
+	echo "Actual <b>SID</b> : ".$sid."<br>";
 	echo "Force SID Renew ? <a href=http://".$ip.$file."?action=ResetSID target='_blank'>http://".$ip.$file."?action=ResetSID </a><br><br>";
 	echo "Saved Snapshots location : <i>".$dirnamefull."</i><br>";
 	echo "Archived Snapshots location : <i>".$dirnamefull."/".$SnapDir."</i><br>";
@@ -304,7 +309,7 @@ if ($list == "camera") {
 	echo "<b>Stop recording</b> all cameras : <a href=http://".$ip.$file."?action=stop target='_blank'>http://".$ip.$file."?action=stop </a><br>";
 	echo "Send screenshots per <b>e-mail</b> for all cameras : <a href=http://".$ip.$file."?action=mail target='_blank'>http://".$ip.$file."?action=mail </a><br>";
 	//
-	echo "<br><hr><u>Actions for each individual cameras:</u><hr>";
+	echo "<br><hr><u>Actions for each individual cameras :</u><hr>";
 	//list of known cams 
 	foreach($obj->data->cameras as $cam){
 		$id_cam = $cam->id;
@@ -312,7 +317,7 @@ if ($list == "camera") {
 		$vendor = $cam->vendor;
 		$model = $cam->model;
 		$ptzCap = $cam->ptzCap;
-		echo "Camera Name: <b>".$nomCam." (".$id_cam.") ";
+		echo "Camera Name : <b>".$nomCam." (".$id_cam.") ";
 		if ($cam->enabled) {
 			echo "Is Enabled</b> --> <a href=http://".$ip.$file."?action=disable&camera=".$id_cam." target='_blank'>Disable ?</a><br>";
 		} else {
@@ -321,12 +326,36 @@ if ($list == "camera") {
 		echo "Vendor : <b>".$vendor."</b> - Model : <b>".$model."</b><br>";
 		
 		if ($ptzCap > $ptzCapTest) {
-			echo "List of PTZ presets: <br>";
+			echo "<i>List of PTZ presets : </i>";
 			$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=ListPreset&version=1&cameraId='.$id_cam.'&_sid='.$sid);
 			$listPtz = json_decode($json);
-			foreach($listPtz->data->presets as $ptzId){
-				echo "id: ".$ptzId->id." Name: ".$ptzId->name."  --  URL: "."<a href=http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam." target='_blank'>http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam."</a><br>";
-				}
+			if ($listPtz->data->total == 0) {
+				echo "No PTZ defined.<br>";
+			} else {
+				echo "<b>".$listPtz->data->total."</b> PTZ.<br>";
+				foreach($listPtz->data->presets as $ptzId){
+					echo "id: ".$ptzId->id." Name: ".$ptzId->name."  --  URL: "."<a href=http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam." target='_blank'>http://".$ip.$file."?ptz=".$ptzId->id."&camera=".$id_cam."</a><br>";
+					}
+			}
+
+			echo "<i>List of Patrol defined : </i>";
+			$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=ListPatrol&version=1&cameraId='.$id_cam.'&_sid='.$sid);
+			$listPatrol = json_decode($json);
+			if ($listPatrol->data->total == 0) {
+				echo "No Patrol defined.<br>";
+			} else {
+				echo "<b>".$listPatrol->data->total."</b> Patrols.<br>";
+				foreach($listPatrol->data->patrols as $patrolId){
+					echo "id: ".$patrolId->id." Name: ".$patrolId->name."  --  URL: "."<a href=http://".$ip.$file."?patrol=".$patrolId->id."&camera=".$id_cam." target='_blank'>http://".$ip.$file."?patrol=".$patrolId->id."&camera=".$id_cam."</a><br>";
+					}
+			}
+			
+			echo "<i>Zoom : </i>";
+			echo "IN : "."<a href=http://".$ip.$file."?zoom=in&camera=".$id_cam." target='_blank'>step by step</a>";
+			echo " - "."<a href=http://".$ip.$file."?zoom=inMax&camera=".$id_cam." target='_blank'>total</a>";
+			echo " -- OUT : "."<a href=http://".$ip.$file."?zoom=out&camera=".$id_cam." target='_blank'>step by step</a>";
+			echo " - "."<a href=http://".$ip.$file."?zoom=outMax&camera=".$id_cam." target='_blank'>total</a><br>";
+
 		}
 		//check if cam is connected
 		if (!$cam->status) {
@@ -348,14 +377,14 @@ if ($list == "camera") {
 				echo "<img src='".$http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?&version=9&id='.$id_cam.'&api=SYNO.SurveillanceStation.Camera&method="GetSnapshot"&profileType='.$profileType.'&_sid='.$sid."' alt='image JPG' width='480'><br>";
 			}
 		}
-		echo time_elapsed("Elapsed Processing time: ");
+		echo time_elapsed("Elapsed Processing time : ");
 		echo "<hr>";
 	}
 	exit();
 }
 // Get JSON Camera List ---------------------------------------------------------------------------
 if ($list == "json") {
-	echo "Json camera list viewer. Copy the Json below and paste it in this viewer:<br>";
+	echo "Json camera list viewer. Copy the Json below and paste it in this viewer :<br>";
 	echo "<a href=https://codebeautify.org/jsonviewer target='_blank'>https://codebeautify.org/jsonviewer</a><br><br>";
 	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$CamPath.'?api=SYNO.SurveillanceStation.Camera&version='.$vCamera.'&method=List&_sid='.$sid);
 	echo $json;
@@ -370,7 +399,7 @@ if ($action != NULL) {
 	$obj = ListCams($http, $ip_ss, $port, $CamPath, $vCamera, $sid);
 	$nbrCam = $obj->data->total;
 	if ($nbrCam == 0) {
-		echo "No camera defined";
+		echo "No camera defined.";
 		exit();
 	}
 
@@ -382,7 +411,7 @@ if ($action != NULL) {
 		}
 	} else if ($action == "ResetSID") {
 		SessionSave("","","");
-		if ($debug) {echo "Status of variables after ResetSID execution: Path: ".$CamPath." SID: ".$sid." Auth: ".$AuthPath;}
+		if ($debug) {echo "Status of variables after ResetSID execution : Path : ".$CamPath." SID : ".$sid." Auth : ".$AuthPath;}
 		exit();
 	} else if ($action == "mail") {
 		// e-mail preparation
@@ -551,6 +580,39 @@ if ($cameraPtz != NULL && $cameraID != 0) {
 	ClosePage();
 	exit();
 }
+
+// Patrol the camera ---------------------------------------------------------------
+if ($cameraPatrol != NULL && $cameraID != 0) {
+	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
+	$obj = json_decode($json);
+	$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+	//echo $PtzPath.'<br>';
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=RunPatrol&version=2&cameraId='.$cameraID.'&patrolId='.$cameraPatrol.'&_sid='.$sid);
+	echo $json;
+	ClosePage();
+	exit();
+}
+
+// Zoom in|out the camera ---------------------------------------------------------------
+if ($cameraZoom != NULL && $cameraID != 0) {
+	//Get SYNO.SurveillanceStation.Ptz path (recommended by Synology for further update)
+	$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/query.cgi?api=SYNO.API.Info&method=Query&version=1&query=SYNO.SurveillanceStation.PTZ');
+	$obj = json_decode($json);
+	$PtzPath = $obj->data->{'SYNO.SurveillanceStation.PTZ'}->path;
+	//echo $PtzPath.'<br>';
+	if ($cameraZoom == "in" or $cameraZoom == "out") {
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=Zoom&version=1&cameraId='.$cameraID.'&control='.$cameraZoom.'&_sid='.$sid);
+	} elseif ($cameraZoom == "inTot") {
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=Zoom&version=3&cameraId='.$cameraID.'&control=in&moveType=Start&_sid='.$sid);
+	} elseif ($cameraZoom = "outTot") {
+		$json = file_get_contents($http.'://'.$ip_ss.':'.$port.'/webapi/'.$PtzPath.'?api=SYNO.SurveillanceStation.PTZ&method=Zoom&version=3&cameraId='.$cameraID.'&control=out&moveType=Start&_sid='.$sid);
+	}
+	echo $json;
+	ClosePage();
+	exit();
+}
+
 
 // Stream
 if ($stream != NULL && $cameraID != 0) {
