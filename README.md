@@ -44,6 +44,8 @@ v18 by Jojo (04/10/2018)	:	review/optimize code
 								& add parameter debug=1
 								& add autorefresh (via .ini file ( v >= 3.0) or via parameter)
 v18.1 by Jojo (21/02/2019)	:	correct bug with PTZ
+v19.0 by Jojo (xx/03/2019)	:	add zoom in/out
+								& add patrol
 
 # ToDo:
  - accept array of cameras form url arguments
@@ -104,6 +106,9 @@ Thanks to all open sources examples grabbed all along the web and specially fill
 		Get Mjpeg :		http://xxxxxx/SSS_Get.php?stream=mjpeg&camera=#             - returns mjpeg stream of camera #
 		Debug :			http://xxxxxx/SSS_Get.php?debug=1							- run the script in debug mode
 		Refresh :		http://xxxxxx/SSS_Get.php?refresh=#							- refresh de home page every # sec/9999 to stop
+		Move Camera :	http://xxxxxx/SSS_Get.php?ptz=<position>&camera=#		    - move camera # to PTZ position <position>
+		Patrol Camera :	http://xxxxxx/SSS_Get.php?patrol=<patrol>&camera=#			- patrol camera # according to patrol def <patrol>
+		Zoom Camera :	http://xxxxxx/SSS_Get.php?zoom=in|out|inTot|outTot&camera=# - zoom camera # in|out|inTot|outTot
 
 ```
 ## Some Examples :
